@@ -20,6 +20,7 @@ Each application lives in its own GitHub repository under the `towlion` organiza
 ```
 repo/
   app/                          # FastAPI backend
+    __init__.py                 # Package marker (required)
     Dockerfile                  # Backend container image
     main.py                     # Application entry point
   frontend/                     # Next.js frontend (optional)

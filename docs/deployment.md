@@ -78,16 +78,16 @@ If the health check fails, traffic stays on the previous version.
 
 ## Database Migrations
 
-Migrations run automatically as part of the deployment pipeline, **before** the new application container starts.
+Migrations run automatically as part of the deployment pipeline, **after the application container starts, by executing alembic inside the running container**.
 
 ```
 Deploy started
       │
       ▼
-Run database migrations
+Start containers
       │
       ▼
-Start new application container
+Run migrations (inside container)
       │
       ▼
 Health check
@@ -96,7 +96,7 @@ Health check
 Migration command:
 
 ```bash
-docker compose exec app alembic upgrade head
+docker compose exec app alembic -c app/alembic.ini upgrade head
 ```
 
 ### Safe Migration Rules
