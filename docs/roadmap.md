@@ -13,7 +13,7 @@ Establish the core runtime environment.
 
 **Done when:** A fresh Debian 12 server can be bootstrapped to a running platform state by executing a single script. All platform services (PostgreSQL, Redis, MinIO, Caddy) are running and accessible.
 
-**Status:** ~80% complete. Docs, spec, and template are done. Server bootstrap script does not yet exist — setup is currently manual.
+**Status:** Complete.
 
 ## Phase 2 — Application Template
 

@@ -226,7 +226,7 @@ services:
   postgres:
     image: postgres:16
     volumes:
-      - /data/database:/var/lib/postgresql/data
+      - /data/postgres:/var/lib/postgresql/data
   redis:
     image: redis
   minio:

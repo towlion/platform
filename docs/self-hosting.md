@@ -84,15 +84,24 @@ To deploy an application from a fork:
 
 ### Bootstrap Script
 
-The repository includes infrastructure scripts:
+The repository includes a single bootstrap script that transforms a fresh Debian 12 server into a ready-to-deploy platform:
 
-```
-infrastructure/
-  bootstrap-server.sh       # Initial server setup
-  install-dependencies.sh   # Install Docker, etc.
+```bash
+sudo bash infrastructure/bootstrap-server.sh
 ```
 
-The bootstrap script prepares the server by installing Docker, creating the `/data` directory structure, and configuring the firewall.
+The script is idempotent — safe to re-run on an already-bootstrapped server. It performs:
+
+- System packages (git, curl, ufw)
+- Firewall configuration (ports 22, 80, 443)
+- Docker and Compose plugin installation
+- `deploy` user creation with SSH directory
+- Directory structure (`/data/postgres`, `/data/redis`, `/data/minio`, `/data/caddy`, `/opt/apps`, `/opt/platform`)
+- Docker network (`towlion`) for cross-container communication
+- Credential generation (PostgreSQL and MinIO passwords in `/opt/platform/.env`)
+- Platform Caddyfile with per-app import pattern
+- Platform `docker-compose.yml` (PostgreSQL 16, Redis 7, MinIO, Caddy 2)
+- Service startup and verification
 
 ## DNS Configuration
 
