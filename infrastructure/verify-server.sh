@@ -58,7 +58,7 @@ fi
 # --- Directories ---
 
 ALL_DIRS_OK=true
-for dir in /data/postgres /data/redis /data/minio /data/caddy /opt/apps /opt/platform; do
+for dir in /data/postgres /data/redis /data/minio /data/caddy /data/loki /data/grafana /data/backups/postgres /opt/apps /opt/platform /opt/platform/credentials; do
   if [[ ! -d "$dir" ]]; then
     ALL_DIRS_OK=false
     fail "Directory missing: $dir"
@@ -96,7 +96,7 @@ COMPOSE_FILE="/opt/platform/docker-compose.yml"
 if [[ ! -f "$COMPOSE_FILE" ]]; then
   fail "Platform compose file not found at $COMPOSE_FILE"
 else
-  for service in postgres redis minio caddy; do
+  for service in postgres redis minio caddy loki promtail grafana; do
     if docker compose -f "$COMPOSE_FILE" ps --format json "$service" 2>/dev/null | grep -q '"running"'; then
       pass "$service is running"
     else
@@ -129,6 +129,22 @@ if curl -sf -o /dev/null http://localhost:80; then
   pass "Caddy is responding on port 80"
 else
   fail "Caddy is not responding on port 80"
+fi
+
+# --- Loki Health ---
+
+if wget -qO- http://localhost:3100/ready 2>/dev/null | grep -q "ready"; then
+  pass "Loki is ready"
+else
+  fail "Loki is not ready"
+fi
+
+# --- Grafana Health ---
+
+if wget -qO- http://localhost:3000/api/health 2>/dev/null | grep -q "ok"; then
+  pass "Grafana is healthy"
+else
+  fail "Grafana is not healthy"
 fi
 
 # --- Firewall ---

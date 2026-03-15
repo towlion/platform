@@ -80,7 +80,7 @@ Add the operational foundation required before opening the platform to self-host
 
 **Done when:** Platform operator can view health of all running apps, restore from a backup, and receive alerts when a container is unhealthy or disk is >80% full. Each app has isolated credentials.
 
-**Status:** Not started. No monitoring, backup, or alerting exists. Credential isolation deferred from Phase 5.
+**Status:** In progress. Infrastructure scripts and bootstrap changes implemented. Pending server deployment and verification.
 
 ## Phase 6 — Self-Hosting Ecosystem
 

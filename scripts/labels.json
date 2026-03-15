@@ -28,5 +28,10 @@
     "name": "good first issue",
     "color": "7057ff",
     "description": "Good for newcomers"
+  },
+  {
+    "name": "alert",
+    "color": "e36209",
+    "description": "Automated platform alert"
   }
 ]
