@@ -40,7 +40,7 @@ Automate the deploy-on-push pipeline.
 
 **Done when:** Pushing to `main` on any app repo triggers a GitHub Actions workflow that deploys and verifies the app is healthy, with no manual SSH required. Tested with at least 2 different application repos.
 
-**Status:** In progress. Deploy workflow now supports multi-app: auto-creates per-app databases, generates Caddyfiles with project-prefixed container names, and guards on `.env` existence. Needs testing with 2+ apps on the same server.
+**Status:** Complete. Tested with hello-world app deployed alongside todo-app on the same server. Deploy workflow auto-creates per-app databases, generates Caddyfiles with project-prefixed container names, and guards on `.env` existence.
 
 ## Phase 4 — Preview Environments
 
