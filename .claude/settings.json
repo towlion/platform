@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "filepath=\"$TOOL_INPUT_file_path\"; case \"$filepath\" in */docs/*) echo '[Hook] Editing a docs/ file — check cross-references between spec.md, ecosystem.md, governance.md, and ROADMAP.md' ;; esac; exit 0"
+          }
+        ]
+      }
+    ]
+  }
+}
