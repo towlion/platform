@@ -13,8 +13,8 @@ GitHub Actions
        ├── Run Tests
        ├── Build Docker Image
        ├── SSH into Server
-       ├── Run Database Migrations
        ├── Deploy Containers
+       ├── Run Database Migrations (inside container)
        ├── Health Check
        └── Enable Traffic
 ```
