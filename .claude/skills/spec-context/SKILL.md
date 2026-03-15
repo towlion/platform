@@ -39,3 +39,9 @@ Key rules from the Towlion platform specification:
 - **Tier 1**: Structure — required files and directories exist
 - **Tier 2**: Content — YAML valid, port 8000 referenced, env vars present, FastAPI used, no hardcoded secrets
 - **Tier 3**: Runtime — containers build, compose validates, health endpoint responds
+
+## Platform Services (7 total)
+- PostgreSQL 16, Redis 7, MinIO, Caddy 2, Loki 3.0, Promtail 3.0, Grafana 11.0
+- All on `towlion` Docker network
+- Compose file: `/opt/platform/docker-compose.yml`
+- Per-app credentials: `/opt/platform/credentials/<app>.env` (DB_USER, DB_PASSWORD, S3_ACCESS_KEY, S3_SECRET_KEY)

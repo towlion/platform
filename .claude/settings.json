@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "filepath=\"$TOOL_INPUT_file_path\"; case \"$filepath\" in */docs/*) echo '[Hook] Editing a docs/ file — check cross-references between spec.md, ecosystem.md, governance.md, and ROADMAP.md' ;; esac; exit 0"
+            "command": "filepath=\"$TOOL_INPUT_file_path\"; case \"$filepath\" in */docs/*) echo '[Hook] Editing a docs/ file — check cross-references between spec.md, ecosystem.md, governance.md, ROADMAP.md, server-contract.md, and self-hosting.md' ;; esac; exit 0"
           }
         ]
       }
