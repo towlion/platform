@@ -15,7 +15,12 @@ docs/                  # All documentation (Markdown)
   self-hosting.md      # Fork model, server requirements, bootstrap
   preview-environments.md  # PR previews, DNS, cleanup
   ecosystem.md         # Org structure, app template, multi-app hosting
+  governance.md        # Repository governance policies
   roadmap.md           # Phased development plan
+scripts/
+  setup-repo.sh        # GitHub repo governance setup script
+templates/
+  .github/             # Template files for app repos (PR template, CODEOWNERS, etc.)
 mkdocs.yml             # MkDocs Material site configuration
 .github/workflows/
   docs.yml             # GitHub Pages deployment workflow

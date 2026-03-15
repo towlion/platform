@@ -36,6 +36,7 @@ nav:
   - Self-Hosting: self-hosting.md
   - Preview Environments: preview-environments.md
   - Ecosystem: ecosystem.md
+  - Governance: governance.md
   - Roadmap: roadmap.md
 
 markdown_extensions:

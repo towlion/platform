@@ -14,8 +14,10 @@ Thanks for your interest in contributing! This project is a **documentation-only
 
 1. **Fork** the repository.
 2. **Create a branch** from `main` with a descriptive name (e.g. `fix/typo-in-deployment`, `docs/add-monitoring-guide`).
-3. **Make your changes** — see the documentation conventions below.
+3. **Make your changes** — see the documentation conventions below. Follow the [commit conventions](docs/governance.md#commit-conventions) for your commit messages.
 4. **Open a pull request** against `main` with a clear description of what changed and why.
+
+All towlion repositories follow standard [governance policies](docs/governance.md) including branch protection, PR templates, and commit conventions.
 
 ### Documentation Conventions
 
