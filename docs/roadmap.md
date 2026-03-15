@@ -80,7 +80,7 @@ Add the operational foundation required before opening the platform to self-host
 
 **Done when:** Platform operator can view health of all running apps, restore from a backup, and receive alerts when a container is unhealthy or disk is >80% full. Each app has isolated credentials.
 
-**Status:** In progress. Infrastructure scripts and bootstrap changes implemented. Pending server deployment and verification.
+**Status:** Complete. All 7 platform services running (postgres, redis, minio, caddy, loki, promtail, grafana). Per-app credentials provisioned for todo-app, hello-world, and starter-app. Cron jobs installed (backup, alerts, image updates). Grafana accessible at ops.anulectra.com.
 
 ## Phase 6 — Self-Hosting Ecosystem
 

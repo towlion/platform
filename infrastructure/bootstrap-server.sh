@@ -146,6 +146,9 @@ for dir in \
   mkdir -p "$dir"
 done
 chown -R deploy:deploy /data /opt/apps /opt/platform
+# Grafana runs as UID 472, Loki as UID 10001 inside their containers
+chown -R 472:472 /data/grafana
+chown -R 10001:10001 /data/loki
 info "Directory structure created (/data/*, /opt/apps, /opt/platform)"
 
 # --- Docker Network ---
@@ -241,6 +244,7 @@ compactor:
   working_directory: /loki/compactor
   retention_enabled: true
   delete_request_cancel_period: 10m
+  delete_request_store: filesystem
 EOF
 
   chown deploy:deploy "$LOKI_CONFIG"

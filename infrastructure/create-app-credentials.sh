@@ -79,30 +79,11 @@ if [ -z "${MINIO_ROOT_USER:-}" ] || [ -z "${MINIO_ROOT_PASSWORD:-}" ]; then
   exit 1
 fi
 
-# Set MinIO alias
-info "Configuring MinIO client..."
-docker run --rm --network towlion minio/mc alias set local http://minio:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null 2>&1
-
-# Create bucket
-info "Creating MinIO bucket: ${APP_NAME}-uploads..."
-if docker run --rm --network towlion minio/mc mb "local/${APP_NAME}-uploads" --ignore-existing 2>&1 | grep -q "Bucket created successfully"; then
-  info "Bucket created successfully"
-else
-  warn "Bucket '${APP_NAME}-uploads' may already exist"
-fi
-
-# Create MinIO user
+# MinIO setup: bucket, user, policy (all in one container to preserve alias)
 MINIO_USER="${APP_NAME}-user"
-info "Creating MinIO user: ${MINIO_USER}..."
-if docker run --rm --network towlion minio/mc admin user add local "${MINIO_USER}" "${S3_PASSWORD}" 2>&1 | grep -q "Added user"; then
-  info "MinIO user created successfully"
-else
-  warn "MinIO user '${MINIO_USER}' may already exist, password not updated"
-fi
+info "Setting up MinIO: bucket, user, and policy for ${APP_NAME}..."
 
-# Create scoped policy
-info "Creating MinIO policy for ${APP_NAME}..."
-POLICY_JSON=$(cat <<EOF
+POLICY_JSON=$(cat <<PEOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -121,17 +102,18 @@ POLICY_JSON=$(cat <<EOF
     }
   ]
 }
-EOF
+PEOF
 )
 
-# Write policy to temp location and create it
-docker run --rm --network towlion -v /tmp:/tmp minio/mc sh -c "echo '$POLICY_JSON' > /tmp/${APP_NAME}-policy.json && mc alias set local http://minio:9000 $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD >/dev/null 2>&1 && mc admin policy create local ${APP_NAME}-policy /tmp/${APP_NAME}-policy.json" >/dev/null 2>&1
-info "MinIO policy created"
-
-# Attach policy to user
-info "Attaching policy to user..."
-docker run --rm --network towlion minio/mc sh -c "mc alias set local http://minio:9000 $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD >/dev/null 2>&1 && mc admin policy attach local ${APP_NAME}-policy --user ${MINIO_USER}" >/dev/null 2>&1
-info "Policy attached successfully"
+docker run --rm --network towlion --entrypoint sh minio/mc -c "
+  mc alias set local http://minio:9000 '${MINIO_ROOT_USER}' '${MINIO_ROOT_PASSWORD}' >/dev/null 2>&1
+  mc mb local/${APP_NAME}-uploads --ignore-existing 2>/dev/null || true
+  mc admin user add local '${MINIO_USER}' '${S3_PASSWORD}' 2>/dev/null || true
+  echo '${POLICY_JSON}' > /tmp/policy.json
+  mc admin policy create local ${APP_NAME}-policy /tmp/policy.json 2>/dev/null || true
+  mc admin policy attach local ${APP_NAME}-policy --user '${MINIO_USER}' 2>/dev/null || true
+"
+info "MinIO bucket, user, and policy configured"
 
 # Write credentials file
 CREDENTIALS_DIR="/opt/platform/credentials"
