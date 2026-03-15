@@ -132,3 +132,5 @@ After deployment, your server runs:
 - Celery background workers
 
 All managed through GitHub — push code to deploy updates.
+
+For the full directory layout, lifecycle sequence, and workflow assumptions, see [Server Contract](server-contract.md).

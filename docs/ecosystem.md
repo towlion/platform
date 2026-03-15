@@ -80,6 +80,8 @@ Each application gets:
 - Its own storage bucket
 - Its own container(s)
 
+For details on how the server is structured and how app workflows interact with it, see [Server Contract](server-contract.md).
+
 ## Core Philosophy
 
 ### 1. Repository-Driven Deployment
