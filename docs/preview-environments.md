@@ -62,16 +62,15 @@ on:
 
 ### Deploy (opened/synchronize/reopened)
 
-1. SSH to server, `cd /opt/apps/{APP_NAME}`
-2. Fetch and checkout the PR branch
+1. SSH to server, clone repo to `/opt/apps/{APP_NAME}-pr-{N}` (or pull if it already exists)
+2. Checkout the PR branch in the dedicated preview directory
 3. Create PostgreSQL schema `pr_{N}` in the app's database
-4. Generate `.env.pr-{N}` with schema-aware `DATABASE_URL`
+4. Copy production `.env` from `/opt/apps/{APP_NAME}/deploy/.env` and generate `.env.pr-{N}` with schema-aware `DATABASE_URL`
 5. Build and start containers: `docker compose -p {APP_NAME}-pr-{N} -f deploy/docker-compose.yml up -d --build`
 6. Run Alembic migrations against the preview schema
 7. Write Caddyfile to `/opt/platform/caddy-apps/{APP_NAME}-pr-{N}.caddy`
 8. Reload Caddy
-9. Switch back to `main` branch (so production deploys aren't affected)
-10. Post/update PR comment with preview URL
+9. Post/update PR comment with preview URL
 
 ### Cleanup (closed)
 
@@ -79,7 +78,7 @@ on:
 2. Drop schema: `DROP SCHEMA IF EXISTS pr_{N} CASCADE`
 3. Remove Caddyfile: `rm /opt/platform/caddy-apps/{APP_NAME}-pr-{N}.caddy`
 4. Reload Caddy
-5. Clean up `.env.pr-{N}` and local branch
+5. Remove the preview directory: `rm -rf /opt/apps/{APP_NAME}-pr-{N}`
 
 ## Database Schema Isolation
 
