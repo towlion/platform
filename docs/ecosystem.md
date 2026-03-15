@@ -6,8 +6,8 @@ The Towlion GitHub organization serves as a catalog of deployable applications. 
 
 ```
 towlion/
-  platform            # Architecture docs and platform tools
-  app-template         # Template for bootstrapping new apps
+  platform            # Architecture docs and platform tools (github.com/towlion/platform)
+  app-template         # Template for bootstrapping new apps (github.com/towlion/app-template)
   uku-companion        # Music practice companion
   fretboard-trainer    # Guitar fretboard learning tool
   chord-transposer     # Chord transposition utility
@@ -25,9 +25,9 @@ The meta repository for the ecosystem. Contains:
 - Deployment guides
 - Roadmap
 
-### Application Template (`towlion/app-template`)
+### Application Template ([`towlion/app-template`](https://github.com/towlion/app-template))
 
-A template repository for creating new applications. Includes:
+A [GitHub Template Repository](https://github.com/towlion/app-template) for creating new applications. Includes:
 
 - FastAPI backend scaffold
 - Next.js frontend scaffold
@@ -37,7 +37,7 @@ A template repository for creating new applications. Includes:
 
 New apps are created by:
 
-1. Use the template to create a new repo
+1. Click ["Use this template"](https://github.com/towlion/app-template/generate) to create a new repo
 2. Customize the application code
 3. Push — deploys automatically
 
@@ -49,6 +49,7 @@ Each application is a **separate GitHub repository** under the `towlion` organiz
 - Contains its own Docker configuration and deployment workflow
 - Can be forked and self-hosted independently
 - Follows the [application specification](spec.md)
+- Follows the platform's [governance policies](governance.md), including branch protection, PR requirements, and commit conventions
 
 ## Multi-Application Runtime
 
