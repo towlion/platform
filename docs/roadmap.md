@@ -53,7 +53,7 @@ Enable preview deployments for pull requests. This is a significant feature requ
 
 **Done when:** Opening a PR creates an accessible preview environment with its own database state. Closing the PR fully removes all preview resources. Tested with at least 2 concurrent previews.
 
-**Status:** Complete. Wildcard DNS (`*.preview.anulectra.com`) configured. Preview workflow (`preview.yml`) added to app-template: deploys on PR open/sync, cleans up on PR close. Each PR gets an isolated PostgreSQL schema and a per-PR Caddyfile.
+**Status:** Complete. Wildcard DNS (`*.preview.anulectra.com`) configured. Preview workflow (`preview.yml`) added to app-template: deploys on PR open/sync, cleans up on PR close. Each PR gets an isolated PostgreSQL schema and a per-PR Caddyfile. Preview/production race condition fixed — each preview now gets its own clone directory (`/opt/apps/{APP_NAME}-pr-{N}`) instead of sharing the production directory.
 
 ## Phase 5 — Multi-App Platform
 
