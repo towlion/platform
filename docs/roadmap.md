@@ -40,7 +40,7 @@ Automate the deploy-on-push pipeline.
 
 **Done when:** Pushing to `main` on any app repo triggers a GitHub Actions workflow that deploys and verifies the app is healthy, with no manual SSH required. Tested with at least 2 different application repos.
 
-**Status:** Complete. Tested with hello-world app deployed alongside todo-app on the same server. Deploy workflow auto-creates per-app databases, generates Caddyfiles with project-prefixed container names, and guards on `.env` existence.
+**Status:** Complete. Tested with hello-world and todo-app deployed on the same server via the multi-app workflow. Deploy workflow auto-creates per-app databases, generates Caddyfiles with project-prefixed container names, and guards on `.env` existence.
 
 ## Phase 4 — Preview Environments
 
@@ -65,7 +65,7 @@ Support running many applications on a single server.
 
 **Done when:** At least 3 apps run simultaneously on one server with independent subdomains, isolated databases, and no resource contention under normal load. Resource limits are enforced per container.
 
-**Status:** Partially addressed. Per-app database creation and Caddy routing are handled by the deploy workflow (Phase 3). Per-app resource limits and credential isolation remain to be implemented.
+**Status:** Partially addressed. Two apps (todo-app at app.anulectra.com, hello-world at app2.anulectra.com) run simultaneously with isolated databases and independent Caddy routes. Per-app resource limits and credential isolation remain to be implemented.
 
 ## Phase 5.5 — Observability and Operations
 
@@ -104,7 +104,7 @@ Build applications on the platform. This is an app development effort, separate 
 
 **Done when:** At least 2 non-trivial applications are deployed and publicly accessible on the platform.
 
-**Status:** No application repos exist. Todo-app was a proof-of-concept only.
+**Status:** Todo-app (proof-of-concept) is live at app.anulectra.com. No non-trivial application repos exist yet.
 
 ## Long-Term Vision
 
