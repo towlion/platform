@@ -65,21 +65,22 @@ Support running many applications on a single server.
 
 **Done when:** At least 3 apps run simultaneously on one server with independent subdomains, isolated databases, and no resource contention under normal load. Resource limits are enforced per container.
 
-**Status:** Partially addressed. Two apps (todo-app at app.anulectra.com, hello-world at app2.anulectra.com) run simultaneously with isolated databases and independent Caddy routes. Per-app resource limits and credential isolation remain to be implemented.
+**Status:** Complete. Three apps running simultaneously: todo-app (app.anulectra.com), hello-world (app2.anulectra.com), starter-app (app3.anulectra.com). Per-app Docker resource limits (CPU/memory) enforced on all app and platform containers. Credential isolation deferred to Phase 5.5.
 
 ## Phase 5.5 — Observability and Operations
 
-Add the operational foundation required before opening the platform to self-hosters.
+Add the operational foundation required before opening the platform to self-hosters. Includes credential isolation deferred from Phase 5.
 
+- Per-app credential isolation (separate PostgreSQL users/passwords per app, scoped MinIO buckets)
 - Monitoring: container health dashboard (Caddy metrics, Docker stats)
 - Logging: centralized log collection from all app containers
 - Backups: automated PostgreSQL backups with retention policy
 - Security: automated OS and Docker image security updates
 - Cost visibility: disk, memory, and bandwidth usage tracking
 
-**Done when:** Platform operator can view health of all running apps, restore from a backup, and receive alerts when a container is unhealthy or disk is >80% full.
+**Done when:** Platform operator can view health of all running apps, restore from a backup, and receive alerts when a container is unhealthy or disk is >80% full. Each app has isolated credentials.
 
-**Status:** Not started. No monitoring, backup, or alerting exists.
+**Status:** Not started. No monitoring, backup, or alerting exists. Credential isolation deferred from Phase 5.
 
 ## Phase 6 — Self-Hosting Ecosystem
 
