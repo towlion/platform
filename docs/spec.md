@@ -1,5 +1,7 @@
 # Application Specification
 
+**Spec Version:** 1.0
+
 This document defines the **standard contract for applications** running on the Towlion platform. Every application repository in the ecosystem should follow this specification.
 
 ## Goals
@@ -18,7 +20,10 @@ Each application lives in its own GitHub repository under the `towlion` organiza
 ```
 repo/
   app/                          # FastAPI backend
-  frontend/                     # Next.js frontend
+    Dockerfile                  # Backend container image
+    main.py                     # Application entry point
+  frontend/                     # Next.js frontend (optional)
+    Dockerfile                  # Frontend container image
 
   deploy/
     docker-compose.yml          # App-specific containers
@@ -35,7 +40,9 @@ repo/
   README.md
 ```
 
-In the multi-app setup, `docker-compose.yml` defines only the application containers (app, frontend, workers). Shared platform services (Caddy, PostgreSQL, Redis, MinIO) are managed at the server level. The `docker-compose.standalone.yml` file bundles everything for self-hosted fork deployments.
+In the multi-app setup, `docker-compose.yml` defines only the application containers (app, frontend, workers). Shared platform services (Caddy, PostgreSQL, Redis, MinIO) are managed at the server level.
+
+The `docker-compose.standalone.yml` file provides a complete, self-contained stack for self-hosted fork deployments. It bundles all platform services (Caddy, PostgreSQL, Redis, MinIO) alongside the application containers so the app can run on a single server without any external dependencies.
 
 ## Backend Requirements
 
@@ -52,6 +59,7 @@ The platform reverse proxy routes traffic to this port.
 Every application must provide a health check endpoint:
 
 - **Endpoint:** `GET /health`
+- **HTTP Status:** `200 OK`
 - **Response:** `{"status": "ok"}`
 
 This endpoint is used during deployments to verify the application started correctly.
@@ -118,15 +126,26 @@ Applications should avoid storing large files on the container filesystem.
 
 Applications may include a frontend built with Next.js, React, and TypeScript. The frontend communicates with the backend via `/api`.
 
+## Dependencies
+
+Python dependencies must be declared in one of:
+
+- `requirements.txt` (default)
+- `pyproject.toml` (alternative)
+
+At minimum, dependencies must include `fastapi` and `uvicorn`.
+
 ## Docker Requirements
 
-Each repository must include Docker configuration. The container must:
+Each repository must include Docker configuration. The backend Dockerfile must be located at `app/Dockerfile`. If the app includes a frontend, its Dockerfile must be at `frontend/Dockerfile`.
+
+The container must:
 
 - Start automatically
 - Expose port 8000
 - Read configuration from environment variables
 
-Example Dockerfile:
+Example `app/Dockerfile`:
 
 ```dockerfile
 FROM python:3.11
@@ -161,9 +180,43 @@ Applications should follow basic security practices:
 
 To remain compatible with the Towlion platform, applications must:
 
+**Structure:**
+- [ ] Include `app/` directory with `Dockerfile` and `main.py`
+- [ ] Include `deploy/` directory with `docker-compose.yml`, `docker-compose.standalone.yml`, `Caddyfile`, and `env.template`
+- [ ] Include `.github/workflows/deploy.yml`
+- [ ] Include `scripts/health-check.sh`
+- [ ] Include `README.md`
+
+**Content:**
+- [ ] `deploy/docker-compose.yml` is valid YAML, references port 8000, and includes a healthcheck
+- [ ] `deploy/env.template` contains `APP_DOMAIN`, `DATABASE_URL`, and `REDIS_URL`
+- [ ] `deploy/Caddyfile` contains `reverse_proxy` directive targeting port 8000
+- [ ] `app/main.py` uses FastAPI
+- [ ] Python dependencies (`requirements.txt` or `pyproject.toml`) include `fastapi` and `uvicorn`
+- [ ] No hardcoded secrets in source code
+
+**Runtime:**
 - [ ] Expose HTTP service on port 8000
-- [ ] Provide `GET /health` endpoint
-- [ ] Support environment-based configuration
-- [ ] Support automated deployment via GitHub Actions
-- [ ] Use PostgreSQL for database
-- [ ] Include Docker configuration
+- [ ] `GET /health` returns HTTP 200 with `{"status": "ok"}`
+- [ ] Containers build and start successfully
+
+## Validation
+
+Use the [Towlion Spec Validator](../validator/README.md) to automatically check conformance.
+
+**Local usage:**
+
+```bash
+# Clone the platform repo and run against your app
+python validator/validate.py --tier 2 --dir /path/to/your/app
+```
+
+**CI usage (GitHub Actions):**
+
+```yaml
+steps:
+  - uses: actions/checkout@v4
+  - uses: towlion/platform/.github/actions/validate@main
+    with:
+      tier: '2'
+```

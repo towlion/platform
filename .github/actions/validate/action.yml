@@ -1,0 +1,27 @@
+name: 'Towlion Spec Validator'
+description: 'Validates an app repo conforms to the Towlion platform spec'
+inputs:
+  tier:
+    description: 'Validation tier (1=structure, 2=content, 3=runtime)'
+    default: '2'
+  strict:
+    description: 'Treat warnings as errors'
+    default: 'false'
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        repository: towlion/platform
+        path: .towlion-validator
+        sparse-checkout: validator
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - shell: bash
+      run: |
+        python .towlion-validator/validator/validate.py \
+          --tier ${{ inputs.tier }} \
+          ${{ inputs.strict == 'true' && '--strict' || '' }}
+    - shell: bash
+      run: rm -rf .towlion-validator
