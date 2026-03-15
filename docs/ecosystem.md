@@ -6,7 +6,8 @@ The Towlion GitHub organization serves as a catalog of deployable applications. 
 
 ```
 towlion/
-  platform            # Architecture docs and platform tools (github.com/towlion/platform)
+  .github              # Organization profile and community health files
+  platform             # Architecture docs and platform tools (github.com/towlion/platform)
   app-template         # Template for bootstrapping new apps (github.com/towlion/app-template)
   uku-companion        # Music practice companion
   fretboard-trainer    # Guitar fretboard learning tool
@@ -15,6 +16,12 @@ towlion/
 ```
 
 ## Repository Types
+
+### Organization Profile ([`towlion/.github`](https://github.com/towlion/.github))
+
+The special `.github` repository provides the organization-level profile README displayed on [github.com/towlion](https://github.com/towlion). Contains:
+
+- `profile/README.md` — marketing content shown on the org landing page
 
 ### Platform Repository (`towlion/platform`)
 
