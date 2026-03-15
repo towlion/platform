@@ -138,6 +138,7 @@ else
 POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 MINIO_ROOT_USER=${MINIO_ROOT_USER}
 MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+ACME_EMAIL=admin@localhost
 EOF
 
   chmod 600 "$ENV_FILE"
@@ -223,6 +224,10 @@ services:
   caddy:
     image: caddy:2
     restart: unless-stopped
+    env_file: .env
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     ports:
       - "80:80"
       - "443:443"
@@ -302,7 +307,8 @@ echo
 echo "Next steps:"
 echo "  1. Add your SSH public key to /home/deploy/.ssh/authorized_keys"
 echo "  2. Configure DNS — point your domain to this server's IP"
-echo "  3. Set GitHub Actions secrets on your app repo:"
-echo "     SERVER_HOST, SERVER_USER (deploy), SERVER_SSH_KEY,"
-echo "     APP_DOMAIN, DATABASE_PASSWORD, MINIO_ROOT_USER, MINIO_ROOT_PASSWORD"
-echo "  4. Push to main — deployment runs automatically"
+echo "  3. Update ACME_EMAIL in $ENV_FILE to a real email for TLS certificates"
+echo "  4. Set GitHub Actions secrets on your app repo:"
+echo "     SERVER_HOST, SERVER_USER (deploy), SERVER_SSH_KEY, APP_DOMAIN"
+echo "  5. Create app dir, clone repo, create deploy/.env from template"
+echo "  6. Push to main — deployment runs automatically"
