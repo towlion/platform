@@ -15,10 +15,12 @@ Full documentation is available at **[towlion.github.io/platform](https://towlio
 - [Preview Environments](https://towlion.github.io/platform/preview-environments/) — PR previews, DNS, cleanup
 - [Ecosystem](https://towlion.github.io/platform/ecosystem/) — org structure, app template, multi-app hosting
 - [Roadmap](https://towlion.github.io/platform/roadmap/) — phased development plan
+- [Tutorial](https://towlion.github.io/platform/tutorial/) — step-by-step deployment walkthrough
+- [Server Contract](https://towlion.github.io/platform/server-contract/) — platform-to-workflow interface
 
 ## Project Status
 
-Early development. The platform is evolving toward a fully automated GitHub-driven deployment ecosystem.
+Phases 1–6 complete. The platform provides a fully automated GitHub-driven deployment ecosystem with infrastructure bootstrap, multi-app hosting, observability, and self-hosting support. Awaiting external validation.
 
 ## License
 

@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This is the **Towlion Platform** repository — a documentation-only repo that defines the architecture, specifications, and guides for a self-hosted GitHub-native micro-PaaS. There is no runnable application code in this repository; it contains only Markdown documentation and MkDocs configuration.
+This is the **Towlion Platform** repository — a spec-and-infrastructure repo that defines the architecture, specifications, infrastructure scripts, and guides for a self-hosted GitHub-native micro-PaaS. There is no runnable application code in this repository; it contains documentation, a spec validator, and server automation scripts.
 
 ## Repository Structure
 
@@ -17,6 +17,19 @@ docs/                  # All documentation (Markdown)
   ecosystem.md         # Org structure, app template, multi-app hosting
   governance.md        # Repository governance policies
   roadmap.md           # Phased development plan
+  tutorial.md          # Step-by-step deployment walkthrough
+  server-contract.md   # Platform-to-workflow interface contract
+infrastructure/        # Server bootstrap and ops scripts
+  bootstrap-server.sh  # Debian 12 -> running platform (idempotent)
+  verify-server.sh     # Read-only server health check
+  create-app-credentials.sh  # Per-app DB/S3 credential provisioning
+  check-alerts.sh      # Cron health checker -> GitHub Issues
+  backup-postgres.sh   # Daily per-database pg_dump
+  restore-postgres.sh  # Restore from backup
+  update-images.sh     # Weekly Docker image pull + recreate
+  usage-report.sh      # Resource usage report
+validator/
+  validate.py          # Spec conformance validator (tiers 1-3)
 scripts/
   setup-repo.sh        # GitHub repo governance setup script
   labels.json          # Standard labels for app repos (used by setup-repo.sh)
@@ -34,12 +47,14 @@ Towlion is a single-server micro-PaaS where GitHub acts as the control plane. Ke
 - **Self-hosting**: Users fork a repo, configure GitHub secrets, push, and the app deploys
 - **Multi-app**: One server hosts multiple apps via subdomain routing through Caddy
 - **App contract**: Backend on port 8000, `GET /health` endpoint, env-var configuration, PostgreSQL + Alembic migrations
+- **Infrastructure automation**: Idempotent server bootstrap, per-app credential provisioning, backups, alerting, and image updates
+- **Self-hosting env vars**: `ACME_EMAIL` (TLS certs), `OPS_DOMAIN` (Grafana route), `ALERT_REPO` (GitHub issue alerts) — all optional with sensible defaults
 
 ## Working With This Repo
 
-### Documentation Only
+### Documentation and Infrastructure
 
-All content is Markdown in `docs/`. There are no tests, no build steps, and no application code to run. Changes should focus on clarity, accuracy, and consistency across documents.
+Documentation is in `docs/`, infrastructure scripts are in `infrastructure/`, and the spec validator is in `validator/`. There is no application code to run. Changes to docs should focus on clarity, accuracy, and consistency across documents.
 
 ### Local Preview
 
@@ -76,3 +91,5 @@ Site serves at `http://127.0.0.1:8000` with auto-reload.
 - **Adding a new documentation page**: Create a `.md` file in `docs/`, then add it to the `nav` section in `mkdocs.yml`
 - **Updating the spec**: Edit `docs/spec.md` — ensure changes are consistent with `architecture.md` and `deployment.md`
 - **Modifying site config**: Edit `mkdocs.yml` for theme, navigation, or extension changes
+- **Running the spec validator**: `python validator/validate.py <path-to-app-repo>` — checks conformance at tiers 1-3
+- **Modifying infrastructure scripts**: Edit files in `infrastructure/` — all scripts must pass `shellcheck` with zero warnings
