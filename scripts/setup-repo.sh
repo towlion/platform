@@ -3,7 +3,7 @@ set -euo pipefail
 
 ORG="towlion"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LABELS_FILE="$SCRIPT_DIR/../templates/.github/labels.json"
+LABELS_FILE="$SCRIPT_DIR/labels.json"
 
 # Colors
 GREEN='\033[0;32m'

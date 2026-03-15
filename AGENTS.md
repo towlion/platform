@@ -19,8 +19,7 @@ docs/                  # All documentation (Markdown)
   roadmap.md           # Phased development plan
 scripts/
   setup-repo.sh        # GitHub repo governance setup script
-templates/
-  .github/             # Template files for app repos (PR template, CODEOWNERS, etc.)
+  labels.json          # Standard labels for app repos (used by setup-repo.sh)
 mkdocs.yml             # MkDocs Material site configuration
 .github/workflows/
   docs.yml             # GitHub Pages deployment workflow

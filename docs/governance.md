@@ -65,7 +65,7 @@ Every application repository must include a `.github/CODEOWNERS` file. At minimu
 * @towlion/maintainers
 ```
 
-See the [template CODEOWNERS](../templates/.github/CODEOWNERS) for the canonical version.
+See the [app-template CODEOWNERS](https://github.com/towlion/app-template/blob/main/.github/CODEOWNERS) for the canonical version.
 
 ## PR Template
 
@@ -76,11 +76,11 @@ Every application repository must include a `.github/PULL_REQUEST_TEMPLATE.md` w
 - **Testing** — How the changes were tested
 - **Checklist** — Standard checklist items
 
-See the [template PR template](../templates/.github/PULL_REQUEST_TEMPLATE.md) for the canonical version.
+See the [app-template PR template](https://github.com/towlion/app-template/blob/main/.github/PULL_REQUEST_TEMPLATE.md) for the canonical version.
 
 ## Required Labels
 
-All application repositories must have the following labels. The setup script creates these automatically from [`templates/.github/labels.json`](../templates/.github/labels.json).
+All application repositories must have the following labels. The setup script creates these automatically from [`scripts/labels.json`](../scripts/labels.json).
 
 | Label | Color | Description |
 |-------|-------|-------------|
