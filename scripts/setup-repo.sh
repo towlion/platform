@@ -60,15 +60,17 @@ echo
 
 gh api -X PATCH "repos/$FULL_REPO" \
   -f has_wiki=false \
-  -f has_projects=false \
-  -f has_discussions=false \
   -f delete_branch_on_merge=true \
   -f allow_squash_merge=true \
   -f allow_merge_commit=false \
   -f allow_rebase_merge=false \
   --silent
 
-info "Repo settings: wiki/projects/discussions disabled, squash-only merge, auto-delete branches"
+# These may fail if the org has the feature disabled — that's fine
+gh api -X PATCH "repos/$FULL_REPO" -f has_projects=false --silent 2>/dev/null || true
+gh api -X PATCH "repos/$FULL_REPO" -f has_discussions=false --silent 2>/dev/null || true
+
+info "Repo settings: wiki disabled, squash-only merge, auto-delete branches"
 
 # --- Branch Protection ---
 
