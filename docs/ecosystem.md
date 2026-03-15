@@ -1,0 +1,105 @@
+# Ecosystem
+
+## GitHub Organization as Application Catalog
+
+The Towlion GitHub organization serves as a catalog of deployable applications. Each repository is a standalone, self-hostable application.
+
+```
+towlion/
+  platform            # Architecture docs and platform tools
+  app-template         # Template for bootstrapping new apps
+  uku-companion        # Music practice companion
+  fretboard-trainer    # Guitar fretboard learning tool
+  chord-transposer     # Chord transposition utility
+  practice-timer       # Practice session timer
+```
+
+## Repository Types
+
+### Platform Repository (`towlion/platform`)
+
+The meta repository for the ecosystem. Contains:
+
+- Architecture documentation
+- Platform specification
+- Deployment guides
+- Roadmap
+
+### Application Template (`towlion/app-template`)
+
+A template repository for creating new applications. Includes:
+
+- FastAPI backend scaffold
+- Next.js frontend scaffold
+- Docker configuration
+- GitHub Actions deployment workflow
+- Database migration setup
+
+New apps are created by:
+
+1. Use the template to create a new repo
+2. Customize the application code
+3. Push — deploys automatically
+
+### Application Repositories
+
+Individual deployable applications. Each one:
+
+- Is a standalone web application
+- Contains its own deployment workflow
+- Can be forked and self-hosted
+- Follows the [application specification](spec.md)
+
+## Multi-Application Runtime
+
+The platform supports running many applications on a single server. All applications share core infrastructure:
+
+```
+Server
+ ├── Caddy (reverse proxy)
+ ├── PostgreSQL
+ ├── Redis
+ ├── MinIO
+ ├── App 1 container
+ ├── App 2 container
+ └── App 3 container
+```
+
+Each application gets:
+
+- Its own subdomain (e.g., `uku.towlion.com`)
+- Its own database (e.g., `uku_db`)
+- Its own storage bucket
+- Its own container(s)
+
+## Core Philosophy
+
+### 1. Repository-Driven Deployment
+
+Each repository deploys itself — no central deployment platform needed.
+
+```
+repository → GitHub Actions → deployed application
+```
+
+### 2. Forkable Infrastructure
+
+Anyone can deploy by forking:
+
+```
+fork → configure secrets → push → running application
+```
+
+### 3. Single-Server SaaS
+
+Optimized for indie developers, small SaaS apps, AI-generated tools, and personal product ecosystems.
+
+## Target Use Cases
+
+The ecosystem is designed for:
+
+- Small SaaS applications
+- Open-source developer tools
+- Web utilities
+- AI-generated applications
+- Self-hosted services

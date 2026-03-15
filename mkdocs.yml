@@ -1,0 +1,52 @@
+site_name: Towlion Platform
+site_description: Self-hosted GitHub-native micro-PaaS for deploying small web applications
+site_url: https://towlion.github.io/platform
+repo_url: https://github.com/towlion/platform
+repo_name: towlion/platform
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+nav:
+  - Home: index.md
+  - Architecture: architecture.md
+  - App Specification: spec.md
+  - Deployment: deployment.md
+  - Self-Hosting: self-hosting.md
+  - Preview Environments: preview-environments.md
+  - Ecosystem: ecosystem.md
+  - Roadmap: roadmap.md
+
+markdown_extensions:
+  - tables
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - attr_list
+  - md_in_html
