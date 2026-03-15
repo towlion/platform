@@ -93,7 +93,7 @@ Enable self-hosting through repository forks.
 
 **Done when:** A person who has never seen the project can fork an app repo, configure 4-5 secrets, run the bootstrap script on a fresh server, push to `main`, and have a working deployment. Tested by someone other than the author.
 
-**Status:** Model is conceptually sound but impractical without bootstrap automation.
+**Status:** Infrastructure parameterized (ACME_EMAIL, OPS_DOMAIN, ALERT_REPO replace all hardcoded values). Documentation corrected (self-hosting.md, tutorial.md list correct 4 secrets, tutorial uses bootstrap script). App-template README updated with deployment secrets and self-hosting links. Awaiting external validation (tested by someone other than the author).
 
 ## Phase 7 — Application Development
 

@@ -13,6 +13,11 @@ error() { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
 
 MARKER="/opt/platform/.bootstrapped"
 
+# Optional environment variables:
+#   ACME_EMAIL   - Email for Let's Encrypt TLS certificates (required for production)
+#   OPS_DOMAIN   - Domain for Grafana dashboard (e.g., ops.example.com)
+#   ALERT_REPO   - GitHub repo for alert issues (e.g., youruser/platform)
+
 # --- Preflight ---
 
 if [[ $EUID -ne 0 ]]; then
@@ -177,12 +182,18 @@ POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 MINIO_ROOT_USER=${MINIO_ROOT_USER}
 MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
 GRAFANA_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
-ACME_EMAIL=admin@localhost
+ACME_EMAIL=${ACME_EMAIL:-admin@localhost}
+OPS_DOMAIN=${OPS_DOMAIN:-localhost}
+ALERT_REPO=${ALERT_REPO:-}
 EOF
 
   chmod 600 "$ENV_FILE"
   chown deploy:deploy "$ENV_FILE"
   info "Credentials generated and written to $ENV_FILE"
+
+  if [[ "${ACME_EMAIL:-admin@localhost}" == "admin@localhost" ]]; then
+    warn "ACME_EMAIL is admin@localhost — TLS certificates will fail. Re-run with ACME_EMAIL=you@example.com"
+  fi
 fi
 
 # --- Caddyfile ---
@@ -400,7 +411,7 @@ else
       "gridPos": { "h": 4, "w": 24, "x": 0, "y": 20 },
       "options": {
         "mode": "markdown",
-        "content": "## Towlion Platform Overview\n\nThis dashboard shows logs from all containers on the platform.\n\n- **Log Stream**: All container logs (filter by service label)\n- **Error Rate**: Count of ERROR lines per service over 5-minute windows\n- **Container Logs by App**: Select an app from the dropdown to filter logs\n\nAlerts are managed by `check-alerts.sh` (cron every 5 min) and create GitHub Issues on the `towlion/platform` repo."
+        "content": "## Towlion Platform Overview\n\nThis dashboard shows logs from all containers on the platform.\n\n- **Log Stream**: All container logs (filter by service label)\n- **Error Rate**: Count of ERROR lines per service over 5-minute windows\n- **Container Logs by App**: Select an app from the dropdown to filter logs\n\nAlerts are managed by `check-alerts.sh` (cron every 5 min) and create GitHub Issues when ALERT_REPO is configured."
       }
     }
   ],
@@ -435,15 +446,17 @@ fi
 OPS_CADDY="/opt/platform/caddy-apps/ops.caddy"
 if [[ -f "$OPS_CADDY" ]]; then
   info "Grafana Caddy route already exists"
-else
-  cat > "$OPS_CADDY" <<'EOF'
-ops.anulectra.com {
+elif [[ -n "${OPS_DOMAIN:-}" ]]; then
+  cat > "$OPS_CADDY" <<EOF
+${OPS_DOMAIN} {
     reverse_proxy grafana:3000
 }
 EOF
 
   chown deploy:deploy "$OPS_CADDY"
   info "Grafana Caddy route created at $OPS_CADDY"
+else
+  info "OPS_DOMAIN not set — skipping Grafana Caddy route (set OPS_DOMAIN to enable)"
 fi
 
 # --- Platform Compose File ---
@@ -606,7 +619,7 @@ services:
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
-      GF_SERVER_ROOT_URL: https://ops.anulectra.com
+      GF_SERVER_ROOT_URL: https://${OPS_DOMAIN:-localhost}
     volumes:
       - /data/grafana:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
@@ -687,7 +700,7 @@ else
 fi
 
 # Alert check every 5 minutes
-ALERT_CRON="*/5 * * * * /opt/platform/infrastructure/check-alerts.sh >> /var/log/towlion-alerts.log 2>&1"
+ALERT_CRON="*/5 * * * * . /opt/platform/.env && /opt/platform/infrastructure/check-alerts.sh >> /var/log/towlion-alerts.log 2>&1"
 if echo "$DEPLOY_CRON" | grep -q "check-alerts"; then
   info "Alert cron job already exists"
 else
@@ -746,10 +759,26 @@ echo
 echo "Next steps:"
 echo "  1. Add your SSH public key to /home/deploy/.ssh/authorized_keys"
 echo "  2. Configure DNS — point your domain to this server's IP"
-echo "  3. Update ACME_EMAIL in $ENV_FILE to a real email for TLS certificates"
-echo "  4. Set GitHub Actions secrets on your app repo:"
+echo "  3. Set GitHub Actions secrets on your app repo:"
 echo "     SERVER_HOST, SERVER_USER (deploy), SERVER_SSH_KEY, APP_DOMAIN"
-echo "  5. Run create-app-credentials.sh <app-name> for per-app credentials"
-echo "  6. Create app dir, clone repo, create deploy/.env from template"
-echo "  7. Push to main — deployment runs automatically"
-echo "  8. Set GITHUB_TOKEN in $ENV_FILE for alert issue creation (optional)"
+echo "  4. Run create-app-credentials.sh <app-name> for per-app credentials"
+echo "  5. Clone app repo to /opt/apps/<name>, create deploy/.env from template"
+echo "  6. Push to main — deployment runs automatically"
+
+if [[ "${ACME_EMAIL:-admin@localhost}" == "admin@localhost" ]]; then
+  echo
+  echo -e "${YELLOW}  ACTION REQUIRED: Set ACME_EMAIL in $ENV_FILE to a real email for TLS certificates.${NC}"
+  echo "  Or re-run: sudo ACME_EMAIL=you@example.com bash bootstrap-server.sh"
+fi
+
+if [[ "${OPS_DOMAIN:-localhost}" == "localhost" ]]; then
+  echo
+  echo -e "${YELLOW}  OPTIONAL: Set OPS_DOMAIN in $ENV_FILE for Grafana dashboard access.${NC}"
+  echo "  Or re-run: sudo OPS_DOMAIN=ops.example.com bash bootstrap-server.sh"
+fi
+
+if [[ -z "${ALERT_REPO:-}" ]]; then
+  echo
+  echo -e "${YELLOW}  OPTIONAL: Set ALERT_REPO in $ENV_FILE (e.g., youruser/platform) for GitHub issue alerts.${NC}"
+  echo "  Also set GITHUB_TOKEN for issue creation."
+fi

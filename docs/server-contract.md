@@ -7,7 +7,7 @@ This document defines the contract between the platform infrastructure (bootstra
 ```
 /opt/platform/                          # Platform root (created by bootstrap-server.sh)
   docker-compose.yml                    # Platform services (postgres, redis, minio, caddy, loki, promtail, grafana)
-  .env                                  # Platform credentials (POSTGRES_PASSWORD, MINIO_ROOT_*, GRAFANA_ADMIN_PASSWORD, ACME_EMAIL)
+  .env                                  # Platform credentials (POSTGRES_PASSWORD, MINIO_ROOT_*, GRAFANA_ADMIN_PASSWORD, ACME_EMAIL, OPS_DOMAIN, ALERT_REPO)
   .bootstrapped                         # Timestamp marker from last bootstrap run
   Caddyfile                             # Global Caddyfile — imports /etc/caddy/apps/*.caddy
   caddy-apps/                           # Per-app Caddyfile fragments (written by deploy/preview workflows)

@@ -8,8 +8,11 @@ set -euo pipefail
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 ALERTS=()
 
-# Check if GITHUB_TOKEN is set (required for issue creation)
-if [[ -z "${GITHUB_TOKEN:-}" ]]; then
+# Check if ALERT_REPO and GITHUB_TOKEN are set (required for issue creation)
+if [[ -z "${ALERT_REPO:-}" ]]; then
+    echo "[$TIMESTAMP] WARNING: ALERT_REPO not set — alerts will be logged but not posted to GitHub"
+    CREATE_ISSUES=false
+elif [[ -z "${GITHUB_TOKEN:-}" ]]; then
     echo "[$TIMESTAMP] WARNING: GITHUB_TOKEN not set, alerts will only be logged (not created as issues)"
     CREATE_ISSUES=false
 else
@@ -55,7 +58,7 @@ if [[ ${#ALERTS[@]} -gt 0 ]]; then
 
         if [[ "$CREATE_ISSUES" == true ]]; then
             # Check if issue already exists (dedup)
-            EXISTING=$(gh issue list --repo towlion/platform \
+            EXISTING=$(gh issue list --repo "${ALERT_REPO}" \
                 --search "Alert: $alert in:title" \
                 --state open \
                 --limit 1 \
@@ -85,7 +88,7 @@ This issue was automatically created by \`infrastructure/check-alerts.sh\`."
 
                 echo "[$TIMESTAMP] Creating issue..."
                 gh issue create \
-                    --repo towlion/platform \
+                    --repo "${ALERT_REPO}" \
                     --title "$ISSUE_TITLE" \
                     --body "$ISSUE_BODY" \
                     --label "alert" || echo "[$TIMESTAMP] Failed to create issue"
