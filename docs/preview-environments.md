@@ -5,91 +5,123 @@ Preview environments allow developers to see changes **before merging into main*
 ## How It Works
 
 ```
-Pull Request opened
-       │
-       ▼
-GitHub Actions triggered
-       │
-       ▼
-Deploy temporary environment
-       │
-       ▼
-pr-42.preview.example.com
+Pull Request opened/updated
+       |
+       v
+GitHub Actions (preview.yml) triggered
+       |
+       v
+Deploy preview container + DB schema
+       |
+       v
+pr-42.preview.anulectra.com
 ```
 
 Each preview environment gets:
 
-- Separate application container
-- Isolated database schema
-- Independent configuration
+- Separate application container (project name `{APP_NAME}-pr-{N}`)
+- Isolated database schema (`pr_{N}` in the app's existing database)
+- Independent Caddyfile route
+- Automatic PR comment with preview URL
 
 ## DNS Configuration
 
-Add a wildcard DNS record pointing to your server:
+A wildcard DNS A record points all preview subdomains to the platform server:
 
 ```
-*.preview.example.com → SERVER_IP
+*.preview.anulectra.com → 143.198.104.8  (TTL 3600)
 ```
 
 This allows any preview subdomain to resolve automatically:
 
 ```
-pr-1.preview.example.com
-pr-42.preview.example.com
-pr-99.preview.example.com
+pr-1.preview.anulectra.com
+pr-42.preview.anulectra.com
+pr-99.preview.anulectra.com
 ```
+
+## GitHub Secrets
+
+Apps need one additional secret beyond the standard 4:
+
+| Secret | Example | Purpose |
+|---|---|---|
+| `PREVIEW_DOMAIN` | `anulectra.com` | Base domain for preview URLs |
+
+The preview URL is constructed as `pr-{N}.preview.{PREVIEW_DOMAIN}`.
 
 ## Deployment Workflow
 
-The preview workflow triggers on pull request events:
+The preview workflow (`.github/workflows/preview.yml`) triggers on pull request events:
 
 ```yaml
 on:
   pull_request:
+    types: [opened, synchronize, reopened, closed]
 ```
 
-Deployment uses a separate Compose file:
+### Deploy (opened/synchronize/reopened)
 
-```bash
-docker compose -f docker-compose.preview.yml up -d
+1. SSH to server, `cd /opt/apps/{APP_NAME}`
+2. Fetch and checkout the PR branch
+3. Create PostgreSQL schema `pr_{N}` in the app's database
+4. Generate `.env.pr-{N}` with schema-aware `DATABASE_URL`
+5. Build and start containers: `docker compose -p {APP_NAME}-pr-{N} -f deploy/docker-compose.yml up -d --build`
+6. Run Alembic migrations against the preview schema
+7. Write Caddyfile to `/opt/platform/caddy-apps/{APP_NAME}-pr-{N}.caddy`
+8. Reload Caddy
+9. Switch back to `main` branch (so production deploys aren't affected)
+10. Post/update PR comment with preview URL
+
+### Cleanup (closed)
+
+1. Stop and remove containers: `docker compose -p {APP_NAME}-pr-{N} down --rmi local`
+2. Drop schema: `DROP SCHEMA IF EXISTS pr_{N} CASCADE`
+3. Remove Caddyfile: `rm /opt/platform/caddy-apps/{APP_NAME}-pr-{N}.caddy`
+4. Reload Caddy
+5. Clean up `.env.pr-{N}` and local branch
+
+## Database Schema Isolation
+
+Preview environments use PostgreSQL schemas rather than separate databases:
+
+- **Production**: uses `{app}_db` database, default `public` schema
+- **Preview PR 42**: uses `{app}_db` database, schema `pr_42`
+
+The schema-aware `DATABASE_URL` uses the `options` parameter:
+
 ```
+postgresql://postgres:<password>@postgres:5432/todo_app_db?options=-csearch_path%3Dpr_42
+```
+
+Alembic migrations run inside the preview container against the PR schema automatically.
 
 ## Container Naming
 
-Preview environments use unique names based on the PR number:
+Preview containers use the Docker Compose project name `{APP_NAME}-pr-{N}`:
 
 ```
-app-pr-42
-db-pr-42
-redis-pr-42
+todo-app-pr-42-app-1
+todo-app-pr-42-celery-worker-1
 ```
 
-## Automatic Cleanup
+## Caddy Routing
 
-When a PR is closed or merged, GitHub Actions automatically removes the preview environment:
-
-```bash
-docker compose -p pr-42 down
-```
-
-This removes all containers and networks associated with the preview.
-
-## Environment Promotion
-
-Preview environments fit into a broader promotion flow:
+Each preview gets a Caddyfile at `/opt/platform/caddy-apps/{APP_NAME}-pr-{N}.caddy`:
 
 ```
-Pull Request → Preview environment
-       │
-       ▼
-Merge to develop → Staging deployment
-       │
-       ▼
-Merge to main → Production deployment
+pr-42.preview.anulectra.com {
+    reverse_proxy todo-app-pr-42-app-1:8000
+}
 ```
 
-| Branch | Environment |
-|---|---|
-| PR branch | Preview |
-| `develop` | Staging |
-| `main` | Production |
+This uses the existing `import /opt/platform/caddy-apps/*.caddy` pattern — no platform Caddy config changes are needed.
+
+## Concurrent Previews
+
+Multiple PRs can be previewed simultaneously. Each gets its own:
+- Container set (unique project name)
+- Database schema (unique schema name)
+- Caddy route (unique Caddyfile)
+
+There is no limit beyond server resources.
