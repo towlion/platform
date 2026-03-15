@@ -40,7 +40,7 @@ Automate the deploy-on-push pipeline.
 
 **Done when:** Pushing to `main` on any app repo triggers a GitHub Actions workflow that deploys and verifies the app is healthy, with no manual SSH required. Tested with at least 2 different application repos.
 
-**Status:** Pattern works for 1 app (todo-app). Untested with multiple apps on the same server.
+**Status:** In progress. Deploy workflow now supports multi-app: auto-creates per-app databases, generates Caddyfiles with project-prefixed container names, and guards on `.env` existence. Needs testing with 2+ apps on the same server.
 
 ## Phase 4 — Preview Environments
 
@@ -65,7 +65,7 @@ Support running many applications on a single server.
 
 **Done when:** At least 3 apps run simultaneously on one server with independent subdomains, isolated databases, and no resource contention under normal load. Resource limits are enforced per container.
 
-**Status:** Architecture documented but never tested with more than 1 app on a real server.
+**Status:** Partially addressed. Per-app database creation and Caddy routing are handled by the deploy workflow (Phase 3). Per-app resource limits and credential isolation remain to be implemented.
 
 ## Phase 5.5 — Observability and Operations
 
