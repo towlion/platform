@@ -185,8 +185,8 @@ GitHub Actions
      +-- SSH into server
      +-- Pull latest code
      +-- Build containers
-     +-- Run database migrations
      +-- Start services
+     +-- Run database migrations (inside container)
      +-- Health check
 ```
 
@@ -285,7 +285,7 @@ docker compose logs app --tail 50
 
 Common causes:
 
-- Database migration failed — check `docker compose logs app` for migration errors
+- Database migration failed — run `docker compose exec app alembic -c app/alembic.ini upgrade head` to retry migrations, and check `docker compose logs app` for errors
 - Missing environment variable — verify all secrets are set in GitHub
 - Port conflict — ensure no other service is using ports 80 or 443
 
