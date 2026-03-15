@@ -213,28 +213,42 @@ Backups can be synced to remote storage using `rclone`.
 
 ## Docker Compose Services
 
-A typical deployment defines these services:
+Each application lives in its own GitHub repository under the `towlion` organization. The server runs two layers of Compose services:
+
+### Platform Services (server-level)
+
+Shared infrastructure managed at the server level, independent of any application repository:
 
 ```yaml
 services:
   caddy:
     image: caddy:2
-  app:
-    build: ./app
-    env_file: .env
-  frontend:
-    build: ./frontend
   postgres:
     image: postgres:16
     volumes:
       - /data/database:/var/lib/postgresql/data
   redis:
     image: redis
-  celery-worker:
-    build: ./app
-    command: celery -A app.tasks worker
   minio:
     image: minio/minio
     volumes:
       - /data/minio:/data
 ```
+
+### Application Services (per-repo)
+
+Each application repository defines its own containers. These connect to the shared platform services via Docker networking:
+
+```yaml
+services:
+  app:
+    build: ./app
+    env_file: .env
+  frontend:
+    build: ./frontend
+  celery-worker:
+    build: ./app
+    command: celery -A app.tasks worker
+```
+
+For single-app self-hosting (fork scenario), a repository may bundle platform services in its own Compose file so it can run standalone.

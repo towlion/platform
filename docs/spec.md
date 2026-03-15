@@ -13,7 +13,7 @@ All applications must be:
 
 ## Repository Structure
 
-Every application repository should follow this structure:
+Each application lives in its own GitHub repository under the `towlion` organization. Every application repository should follow this structure:
 
 ```
 repo/
@@ -21,8 +21,9 @@ repo/
   frontend/                     # Next.js frontend
 
   deploy/
-    docker-compose.yml
-    Caddyfile
+    docker-compose.yml          # App-specific containers
+    docker-compose.standalone.yml  # Full stack for self-hosted forks
+    Caddyfile                   # Caddy site config for this app
     env.template
 
   .github/workflows/
@@ -33,6 +34,8 @@ repo/
 
   README.md
 ```
+
+In the multi-app setup, `docker-compose.yml` defines only the application containers (app, frontend, workers). Shared platform services (Caddy, PostgreSQL, Redis, MinIO) are managed at the server level. The `docker-compose.standalone.yml` file bundles everything for self-hosted fork deployments.
 
 ## Backend Requirements
 

@@ -43,11 +43,11 @@ New apps are created by:
 
 ### Application Repositories
 
-Individual deployable applications. Each one:
+Each application is a **separate GitHub repository** under the `towlion` organization. Each one:
 
-- Is a standalone web application
-- Contains its own deployment workflow
-- Can be forked and self-hosted
+- Is a standalone web application in its own repo
+- Contains its own Docker configuration and deployment workflow
+- Can be forked and self-hosted independently
 - Follows the [application specification](spec.md)
 
 ## Multi-Application Runtime
