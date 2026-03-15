@@ -30,6 +30,7 @@ theme:
 
 nav:
   - Home: index.md
+  - Tutorial: tutorial.md
   - Architecture: architecture.md
   - App Specification: spec.md
   - Deployment: deployment.md
