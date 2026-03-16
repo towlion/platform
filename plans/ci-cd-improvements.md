@@ -1,5 +1,7 @@
 # CI/CD Improvements — Implementation Record
 
+> **Archived** — This plan has been fully implemented and verified. Kept for reference.
+
 **Status**: Implemented (2026-03-16)
 
 ## Changes Made

@@ -104,6 +104,7 @@ All scripts live in the platform repo under `infrastructure/` and are copied to 
 | `check-alerts.sh` | Check container health, disk, memory; create GitHub Issues | Cron: every 5 minutes |
 | `update-images.sh` | Pull latest Docker images and recreate containers | Cron: weekly Sunday at 03:00 |
 | `usage-report.sh` | Generate 6-section resource usage report | Manual (`bash`) |
+| `scan-images.sh` | Scan running container images for vulnerabilities (Trivy) | Cron: weekly Sunday at 04:00 |
 
 ## Server Hardening
 
@@ -119,6 +120,14 @@ The bootstrap script applies several security measures automatically. Self-hoste
 
 **Container resource limits** — Every platform service and every app container has explicit CPU and memory limits in its Docker Compose file. This prevents any single container from exhausting server resources. The 7 core services use ~2.66G / 3.25 CPU. The 3 optional metrics services add 448M / 1.00 CPU when enabled.
 
+**Brute-force protection** — fail2ban is installed with an SSH jail (systemd backend, since Debian 12 uses journald). Configuration: maxretry=5, bantime=3600s. IPs that exceed the retry limit are banned for one hour.
+
+**SSH hardening** — A drop-in config at `/etc/ssh/sshd_config.d/99-towlion-hardening.conf` enforces: `PermitRootLogin no`, `PasswordAuthentication no`, `MaxAuthTries 3`, `X11Forwarding no`. Only key-based authentication as the `deploy` user is permitted.
+
+**Security headers** — The platform Caddyfile includes a `(security_headers)` snippet that sets: `Strict-Transport-Security` (HSTS, max-age=31536000, includeSubDomains), `X-Content-Type-Options nosniff`, `X-Frame-Options DENY`, `Referrer-Policy strict-origin-when-cross-origin`, `Permissions-Policy` (camera, microphone, and geolocation denied), and strips the `Server` header. All app and ops Caddy routes import this snippet.
+
+**Image vulnerability scanning** — Trivy is installed via the Aqua Security apt repository. Every deploy runs a non-blocking `trivy image` scan of the newly built app image (HIGH/CRITICAL severity). A weekly cron job (`scan-images.sh`, Sunday 04:00) scans all running container images.
+
 **Mandatory Access Control (AppArmor)** — Debian 12 ships with AppArmor enabled by default. Docker automatically applies the `docker-default` AppArmor profile to all containers, which restricts capabilities like writing to `/proc` and `/sys`, mounting filesystems, and accessing raw sockets. No configuration is needed — this works out of the box.
 
 SELinux is **not** used. While SELinux is the standard MAC system on RHEL/Fedora, it is not well-suited for Debian:
@@ -132,11 +141,22 @@ Since AppArmor is already active and Docker integrates with it automatically, th
 
 ## Caddyfile Generation
 
-The platform Caddyfile at `/opt/platform/Caddyfile` contains a single import directive:
+The platform Caddyfile at `/opt/platform/Caddyfile` contains a security headers snippet and an import directive:
 
 ```
 {
     email {$ACME_EMAIL:admin@localhost}
+}
+
+(security_headers) {
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        -Server
+    }
 }
 
 import /etc/caddy/apps/*.caddy
@@ -148,6 +168,7 @@ The `caddy-apps/` directory is bind-mounted into the Caddy container at `/etc/ca
 
 ```
 app.example.com {
+    import security_headers
     reverse_proxy <name>-app-1:8000
 }
 ```
@@ -156,6 +177,7 @@ app.example.com {
 
 ```
 pr-<N>.preview.example.com {
+    import security_headers
     reverse_proxy <name>-pr-<N>-app-1:8000
 }
 ```

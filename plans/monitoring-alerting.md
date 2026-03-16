@@ -1,5 +1,7 @@
 # Plan: Expand Alert Checks in check-alerts.sh
 
+> **Archived** — This plan has been fully implemented and verified. Kept for reference.
+
 **Status**: Done (2026-03-16)
 
 ## What was done
