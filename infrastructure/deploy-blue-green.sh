@@ -109,9 +109,22 @@ if [ -f "$CREDENTIALS_FILE" ]; then
   # shellcheck source=/dev/null
   source "$CREDENTIALS_FILE"
   sed -i "s|^DATABASE_URL=.*|DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${APP_DB}|" deploy/.env
-  sed -i "s|^S3_ACCESS_KEY=.*|S3_ACCESS_KEY=${S3_ACCESS_KEY}|" deploy/.env
-  sed -i "s|^S3_SECRET_KEY=.*|S3_SECRET_KEY=${S3_SECRET_KEY}|" deploy/.env
-  sed -i "s|^S3_BUCKET=.*|S3_BUCKET=${APP_NAME}-uploads|" deploy/.env
+
+  # Ensure S3 vars exist (append if missing, substitute if present)
+  if [ -n "${S3_ACCESS_KEY:-}" ]; then
+    grep -q "^S3_ENDPOINT=" deploy/.env \
+      && sed -i "s|^S3_ENDPOINT=.*|S3_ENDPOINT=http://minio:9000|" deploy/.env \
+      || echo "S3_ENDPOINT=http://minio:9000" >> deploy/.env
+    grep -q "^S3_ACCESS_KEY=" deploy/.env \
+      && sed -i "s|^S3_ACCESS_KEY=.*|S3_ACCESS_KEY=${S3_ACCESS_KEY}|" deploy/.env \
+      || echo "S3_ACCESS_KEY=${S3_ACCESS_KEY}" >> deploy/.env
+    grep -q "^S3_SECRET_KEY=" deploy/.env \
+      && sed -i "s|^S3_SECRET_KEY=.*|S3_SECRET_KEY=${S3_SECRET_KEY}|" deploy/.env \
+      || echo "S3_SECRET_KEY=${S3_SECRET_KEY}" >> deploy/.env
+    grep -q "^S3_BUCKET=" deploy/.env \
+      && sed -i "s|^S3_BUCKET=.*|S3_BUCKET=${APP_NAME}-uploads|" deploy/.env \
+      || echo "S3_BUCKET=${APP_NAME}-uploads" >> deploy/.env
+  fi
   info "deploy/.env updated with per-app credentials"
 else
   warn "Per-app credentials not found at $CREDENTIALS_FILE"
