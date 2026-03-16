@@ -14,7 +14,7 @@ towlion/
   starter-app          # Created from app-template
 ```
 
-Planned application repos (e.g., `uku-companion`, `fretboard-trainer`, `chord-transposer`, `practice-timer`) are tracked in the [roadmap](roadmap.md) under Phase 7.
+Planned application repos include `uku-companion`, `fretboard-trainer`, `chord-transposer`, and `practice-timer`.
 
 ## Repository Types
 
@@ -31,7 +31,6 @@ The meta repository for the ecosystem. Contains:
 - Architecture documentation
 - Platform specification
 - Deployment guides
-- Roadmap
 
 ### Application Template ([`towlion/app-template`](https://github.com/towlion/app-template))
 

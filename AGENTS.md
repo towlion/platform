@@ -16,7 +16,6 @@ docs/                  # All documentation (Markdown)
   preview-environments.md  # PR previews, DNS, cleanup
   ecosystem.md         # Org structure, app template, multi-app hosting
   governance.md        # Repository governance policies
-  roadmap.md           # Phased development plan
   tutorial.md          # Step-by-step deployment walkthrough
   server-contract.md   # Platform-to-workflow interface contract
 infrastructure/        # Server bootstrap and ops scripts
@@ -84,7 +83,6 @@ Site serves at `http://127.0.0.1:8000` with auto-reload.
 - `deployment.md` explains the CI/CD pipeline that connects GitHub repos to the server
 - `self-hosting.md` describes how forks configure and deploy independently
 - `ecosystem.md` ties everything together — the org structure, template repo, and multi-app model
-- `roadmap.md` tracks the phased plan from foundation through ecosystem growth
 
 ## Common Tasks
 

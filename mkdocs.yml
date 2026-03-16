@@ -47,7 +47,6 @@ nav:
   - Project:
       - Ecosystem: ecosystem.md
       - Governance: governance.md
-      - Roadmap: roadmap.md
 
 markdown_extensions:
   - tables
