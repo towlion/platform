@@ -4,26 +4,36 @@
 
 The Towlion platform runs on a single Debian server. Applications run as Docker containers and share a set of core infrastructure services.
 
+```mermaid
+graph TB
+    User[User Browser] -->|HTTPS| Caddy
+
+    subgraph Server["Debian 12 Server"]
+        subgraph Docker["Docker / towlion network"]
+            Caddy["Caddy :80/:443"]
+
+            Caddy --> App1["App 1 :8000"]
+            Caddy --> App2["App 2 :8000"]
+            Caddy --> App3["App 3 :8000"]
+            Caddy --> Grafana["Grafana :3000"]
+
+            App1 --> Postgres[("PostgreSQL :5432")]
+            App2 --> Postgres
+            App3 --> Postgres
+            App1 --> Redis[("Redis :6379")]
+            App1 --> MinIO["MinIO :9000"]
+
+            Promtail["Promtail"] --> Loki["Loki :3100"]
+            Loki --> Grafana
+
+            Prometheus["Prometheus :9090"] -.->|optional| Grafana
+            cAdvisor["cAdvisor :8080"] -.->|optional| Prometheus
+            NodeExp["Node Exporter :9100"] -.->|optional| Prometheus
+        end
+    end
 ```
-                Internet
-                    │
-                    ▼
-                  DNS
-                    │
-                    ▼
-              Reverse Proxy
-                 (Caddy)
-            /       |       \
-           ▼        ▼        ▼
-       App 1     App 2     App 3
-           │
-           ▼
-      Shared Services
-           │
-  ┌────────┼─────────┬─────────┐
-  ▼        ▼         ▼         ▼
-PostgreSQL Redis   MinIO    Workers
-```
+
+Dashed lines indicate optional metrics services (enabled via `COMPOSE_PROFILES=metrics`).
 
 ## Technology Stack
 
@@ -214,6 +224,71 @@ pg_dump → /data/backups
 
 Backups can be synced to remote storage using `rclone`.
 
+## CI/CD Flow
+
+```mermaid
+graph LR
+    Push["git push to main"] --> Actions["GitHub Actions"]
+
+    subgraph Actions["GitHub Actions"]
+        Test["Test Job"] --> Deploy["Deploy Job"]
+    end
+
+    Deploy -->|SSH| Server["Server"]
+
+    subgraph Server["Server Operations"]
+        Pull["git pull"] --> Build["docker compose up -d --build"]
+        Build --> Trivy["Trivy image scan"]
+        Build --> Migrate["Alembic migrate"]
+        Migrate --> CaddyWrite["Write Caddyfile"]
+        CaddyWrite --> Reload["Caddy reload"]
+    end
+```
+
+## Backup and Restore Flow
+
+```mermaid
+graph LR
+    subgraph Backup["Daily Backup (cron 02:00)"]
+        Cron["cron"] --> Script["backup-postgres.sh"]
+        Script --> PgDump["pg_dump per database"]
+        PgDump --> Compress["gzip"]
+        Compress --> Store["/data/backups/postgres/"]
+        Store --> Prune["Prune backups > 7 days"]
+    end
+
+    subgraph Restore["Manual Restore"]
+        List["List backups"] --> Choose["Choose backup file"]
+        Choose --> RestoreScript["restore-postgres.sh"]
+        RestoreScript --> Drop["Drop + recreate DB"]
+        Drop --> Import["Import from backup"]
+        Import --> Verify["Verify data"]
+    end
+```
+
+## Preview Environment Flow
+
+```mermaid
+graph TB
+    subgraph Create["PR Opened / Updated"]
+        PR["Pull Request"] --> Actions["GitHub Actions"]
+        Actions -->|SSH| Clone["Clone to /opt/apps/app-pr-N/"]
+        Clone --> Schema["Create PR-specific DB schema"]
+        Schema --> BuildPR["docker compose up -d --build"]
+        BuildPR --> CaddyPR["Write pr-N.preview.domain.caddy"]
+        CaddyPR --> ReloadPR["Caddy reload"]
+        ReloadPR --> Comment["Comment preview URL on PR"]
+    end
+
+    subgraph Cleanup["PR Closed / Merged"]
+        Closed["PR closed"] --> StopContainers["Stop + remove containers"]
+        StopContainers --> DropSchema["Drop PR schema"]
+        DropSchema --> RemoveCaddy["Remove .caddy file"]
+        RemoveCaddy --> ReloadClean["Caddy reload"]
+        ReloadClean --> RemoveDir["Remove /opt/apps/app-pr-N/"]
+    end
+```
+
 ## Docker Compose Services
 
 Each application lives in its own GitHub repository under the `towlion` organization. The server runs two layers of Compose services:
@@ -249,9 +324,8 @@ services:
     env_file: .env
   frontend:
     build: ./frontend
-  celery-worker:
-    build: ./app
-    command: celery -A app.tasks worker
 ```
+
+Celery workers are opt-in. To add background task processing, add a `celery-worker` service to your compose file. See the [app-template README](https://github.com/towlion/app-template#background-tasks) for instructions.
 
 For single-app self-hosting (fork scenario), a repository may bundle platform services in its own Compose file so it can run standalone.

@@ -38,6 +38,37 @@ mkdocs serve
 
 Then open [http://127.0.0.1:8000](http://127.0.0.1:8000) in your browser. The site auto-reloads on file changes.
 
+## Spec Validator
+
+The platform includes a validator that checks app repositories against the [application specification](docs/spec.md). Run it against any app directory:
+
+```bash
+python validator/validate.py /path/to/your-app
+```
+
+The validator checks three tiers: file structure, configuration, and runtime compliance. All tiers should pass before deploying.
+
+## Infrastructure Scripts
+
+Scripts in the `infrastructure/` directory follow these conventions:
+
+- **ShellCheck clean** — all scripts pass `shellcheck` with no warnings
+- **Idempotent** — every section is guarded with existence checks; safe to re-run
+- **No interactive prompts** in automated scripts (cron jobs, CI steps)
+- **Documented** — see `docs/server-contract.md` for the full scripts reference table
+
+When modifying infrastructure scripts, test on a fresh Debian 12 server or verify with `infrastructure/verify-server.sh`.
+
+## Operational Tasks
+
+For day-to-day server operations, see the [runbooks](docs/runbooks/):
+
+- [Restart an app](docs/runbooks/restart-app.md)
+- [Add a new app](docs/runbooks/add-new-app.md)
+- [Rotate credentials](docs/runbooks/rotate-credentials.md)
+- [Restore a backup](docs/runbooks/restore-backup.md)
+- [Debug a failed deploy](docs/runbooks/debug-failed-deploy.md)
+
 ## Code of Conduct
 
 This project follows the [Contributor Covenant v2.1](CODE_OF_CONDUCT.md). By participating, you agree to uphold its standards.

@@ -44,15 +44,34 @@ nav:
       - Preview Environments: preview-environments.md
       - Deploy Prompt: deploy-prompt.md
       - Self-Hosted Runners: self-hosted-runners.md
+  - Operations:
+      - Troubleshooting: troubleshooting.md
+      - Runbooks:
+          - Restart App: runbooks/restart-app.md
+          - Add New App: runbooks/add-new-app.md
+          - Rotate Credentials: runbooks/rotate-credentials.md
+          - Restore Backup: runbooks/restore-backup.md
+          - Debug Failed Deploy: runbooks/debug-failed-deploy.md
   - Project:
       - Ecosystem: ecosystem.md
       - Governance: governance.md
+      - Onboarding: onboarding.md
+      - Decisions:
+          - GitHub as Control Plane: decisions/001-github-as-control-plane.md
+          - Caddy Over Nginx: decisions/002-caddy-over-nginx.md
+          - Single-Server Architecture: decisions/003-single-server-architecture.md
+          - Fork-Based Self-Hosting: decisions/004-fork-based-self-hosting.md
+          - AppArmor Over SELinux: decisions/005-apparmor-over-selinux.md
 
 markdown_extensions:
   - tables
   - admonition
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.highlight:

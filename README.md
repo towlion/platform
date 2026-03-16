@@ -80,6 +80,10 @@ Full documentation is available at **[towlion.github.io/platform](https://towlio
 - [Architecture](https://towlion.github.io/platform/architecture/) — platform design and diagrams
 - [App Specification](https://towlion.github.io/platform/spec/) — application contract (ports, endpoints, env vars)
 - [Self-Hosting](https://towlion.github.io/platform/self-hosting/) — fork model, server requirements, bootstrap
+- [Troubleshooting](https://towlion.github.io/platform/troubleshooting/) — symptom-based debugging guide
+- [Onboarding](https://towlion.github.io/platform/onboarding/) — new contributor checklist
+- [Runbooks](https://towlion.github.io/platform/runbooks/restart-app/) — operational procedures
+- [Architecture Decisions](https://towlion.github.io/platform/decisions/001-github-as-control-plane/) — ADRs
 
 ## License
 
