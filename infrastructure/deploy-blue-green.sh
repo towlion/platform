@@ -163,7 +163,8 @@ docker compose -p "${APP_NAME}-${NEXT_SLOT}" -f "$COMPOSE_FILE" exec -T app \
   }
 
 # Step 9: Scan built image for vulnerabilities (non-blocking)
-APP_IMAGE=$(docker compose -p "${APP_NAME}-${NEXT_SLOT}" -f "$COMPOSE_FILE" images app --format "{{.Repository}}:{{.Tag}}" | head -1)
+APP_IMAGE=$(docker compose -p "${APP_NAME}-${NEXT_SLOT}" -f "$COMPOSE_FILE" images app --format json 2>/dev/null \
+  | python3 -c "import sys,json; imgs=json.load(sys.stdin); print(imgs[0]['Repository']+':'+imgs[0]['Tag'])" 2>/dev/null || echo "")
 if command -v trivy &>/dev/null && [ -n "$APP_IMAGE" ]; then
   info "Scanning ${APP_IMAGE} for vulnerabilities..."
   trivy image --severity HIGH,CRITICAL --exit-code 0 --no-progress "${APP_IMAGE}" || true
