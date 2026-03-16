@@ -68,6 +68,8 @@ Optional secrets:
 |---|---|
 | `PREVIEW_DOMAIN` | Base domain for preview environments (e.g., `example.com`) |
 
+> **Tip:** To reduce the number of required secrets from 4 to 1, you can use a self-hosted GitHub Actions runner instead. See [Self-Hosted Runners](self-hosted-runners.md).
+
 ## Bootstrap Process
 
 To deploy an application from a fork:
