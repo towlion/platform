@@ -48,8 +48,8 @@ echo
 
 echo "Installing system packages..."
 apt-get update -qq
-apt-get install -y -qq git curl ufw vnstat unattended-upgrades apt-listchanges > /dev/null
-info "System packages installed (git, curl, ufw, vnstat, unattended-upgrades)"
+apt-get install -y -qq git curl ufw vnstat unattended-upgrades apt-listchanges fail2ban > /dev/null
+info "System packages installed (git, curl, ufw, vnstat, unattended-upgrades, fail2ban)"
 
 # --- Firewall ---
 
@@ -67,6 +67,48 @@ fi
 ufw allow 22/tcp > /dev/null 2>&1 || true
 ufw allow 80/tcp > /dev/null 2>&1 || true
 ufw allow 443/tcp > /dev/null 2>&1 || true
+
+# --- fail2ban ---
+
+F2B_JAIL="/etc/fail2ban/jail.local"
+if [[ -f "$F2B_JAIL" ]]; then
+  info "fail2ban jail config already exists"
+else
+  cat > "$F2B_JAIL" <<'EOF'
+[DEFAULT]
+bantime = 3600
+findtime = 600
+maxretry = 5
+
+[sshd]
+enabled = true
+port = ssh
+filter = sshd
+logpath = /var/log/auth.log
+maxretry = 5
+EOF
+
+  systemctl enable fail2ban
+  systemctl restart fail2ban
+  info "fail2ban configured (SSH jail: maxretry=5, bantime=3600s, findtime=600s)"
+fi
+
+# --- SSH Hardening ---
+
+SSHD_HARDENING="/etc/ssh/sshd_config.d/99-towlion-hardening.conf"
+if [[ -f "$SSHD_HARDENING" ]]; then
+  info "SSH hardening config already exists"
+else
+  cat > "$SSHD_HARDENING" <<'EOF'
+PermitRootLogin no
+PasswordAuthentication no
+MaxAuthTries 3
+X11Forwarding no
+EOF
+
+  systemctl restart sshd
+  info "SSH hardened (no root login, no password auth, MaxAuthTries=3, no X11)"
+fi
 
 # --- Unattended Upgrades ---
 
@@ -109,6 +151,19 @@ if docker compose version &>/dev/null; then
   info "Docker Compose plugin available"
 else
   error "Docker Compose plugin not found. Expected 'docker compose' to work after Docker install."
+fi
+
+# --- Trivy ---
+
+if command -v trivy &>/dev/null; then
+  info "Trivy already installed"
+else
+  apt-get install -y -qq wget apt-transport-https gnupg > /dev/null
+  wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor -o /usr/share/keyrings/trivy.gpg
+  echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" > /etc/apt/sources.list.d/trivy.list
+  apt-get update -qq
+  apt-get install -y -qq trivy > /dev/null
+  info "Trivy installed"
 fi
 
 # --- Deploy User ---
@@ -215,6 +270,17 @@ else
   cat > "$CADDYFILE" <<'EOF'
 {
     email {$ACME_EMAIL:admin@localhost}
+}
+
+(security_headers) {
+    header {
+        Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        -Server
+    }
 }
 
 import /etc/caddy/apps/*.caddy
@@ -800,6 +866,7 @@ if [[ -f "$OPS_CADDY" ]]; then
 elif [[ -n "${OPS_DOMAIN:-}" ]]; then
   cat > "$OPS_CADDY" <<EOF
 ${OPS_DOMAIN} {
+    import security_headers
     reverse_proxy grafana:3000
 }
 EOF
@@ -1116,7 +1183,7 @@ fi
 
 SCRIPT_DIR="/opt/platform/infrastructure"
 for script in create-app-credentials.sh backup-postgres.sh restore-postgres.sh \
-              check-alerts.sh update-images.sh usage-report.sh; do
+              check-alerts.sh update-images.sh usage-report.sh scan-images.sh; do
   SRC_SCRIPT="$(dirname "$0")/$script"
   if [[ -f "$SRC_SCRIPT" ]]; then
     cp "$SRC_SCRIPT" "$SCRIPT_DIR/$script"
@@ -1155,6 +1222,15 @@ if echo "$DEPLOY_CRON" | grep -q "update-images"; then
 else
   DEPLOY_CRON=$(echo "$DEPLOY_CRON"; echo "$IMAGE_CRON")
   info "Image update cron job added (weekly Sunday 03:00)"
+fi
+
+# Weekly image vulnerability scan — Sundays at 04:00 (after image update at 03:00)
+SCAN_CRON="0 4 * * 0 /opt/platform/infrastructure/scan-images.sh >> /var/log/towlion-scan.log 2>&1"
+if echo "$DEPLOY_CRON" | grep -q "scan-images"; then
+  info "Image scan cron job already exists"
+else
+  DEPLOY_CRON=$(echo "$DEPLOY_CRON"; echo "$SCAN_CRON")
+  info "Image scan cron job added (weekly Sunday 04:00)"
 fi
 
 echo "$DEPLOY_CRON" | crontab -u deploy -
@@ -1196,10 +1272,17 @@ if [[ -f "$ENV_FILE" ]]; then
   echo "  GRAFANA_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-<see $ENV_FILE>}"
 fi
 echo
+echo "Security hardening applied:"
+echo "  - fail2ban (SSH brute-force protection)"
+echo "  - SSH hardened (no root login, no password auth)"
+echo "  - Security headers on all Caddy sites"
+echo "  - Trivy image scanning (deploy-time + weekly cron)"
+echo
 echo "Cron jobs installed for deploy user:"
 echo "  - PostgreSQL backup: daily at 02:00"
 echo "  - Health check alerts: every 5 minutes"
 echo "  - Image updates: weekly Sunday at 03:00"
+echo "  - Image vulnerability scan: weekly Sunday at 04:00"
 echo
 echo "Next steps:"
 echo "  1. Add your SSH public key to /home/deploy/.ssh/authorized_keys"

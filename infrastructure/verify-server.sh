@@ -168,6 +168,26 @@ if docker compose -f "$COMPOSE_FILE" ps --format json prometheus 2>/dev/null | g
   fi
 fi
 
+# --- Security Hardening ---
+
+if systemctl is-active fail2ban &>/dev/null; then
+  pass "fail2ban is running"
+else
+  fail "fail2ban is not running"
+fi
+
+if [[ -f /etc/ssh/sshd_config.d/99-towlion-hardening.conf ]]; then
+  pass "SSH hardening config present"
+else
+  fail "SSH hardening config missing (/etc/ssh/sshd_config.d/99-towlion-hardening.conf)"
+fi
+
+if command -v trivy &>/dev/null; then
+  pass "Trivy is installed"
+else
+  fail "Trivy is not installed"
+fi
+
 # --- Firewall ---
 
 if ufw status 2>/dev/null | grep -q "Status: active"; then
