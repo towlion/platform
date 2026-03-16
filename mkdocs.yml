@@ -30,17 +30,24 @@ extra_css:
   - stylesheets/custom.css
 
 nav:
-  - Home: index.md
-  - Scope: scope.md
-  - Tutorial: tutorial.md
-  - Architecture: architecture.md
-  - App Specification: spec.md
-  - Deployment: deployment.md
-  - Self-Hosting: self-hosting.md
-  - Preview Environments: preview-environments.md
-  - Ecosystem: ecosystem.md
-  - Governance: governance.md
-  - Roadmap: roadmap.md
+  - Getting Started:
+      - Home: index.md
+      - Scope: scope.md
+      - Tutorial: tutorial.md
+  - Architecture:
+      - Overview: architecture.md
+      - App Specification: spec.md
+      - Server Contract: server-contract.md
+  - Deployment:
+      - Pipeline: deployment.md
+      - Self-Hosting: self-hosting.md
+      - Preview Environments: preview-environments.md
+      - Deploy Prompt: deploy-prompt.md
+      - Self-Hosted Runners: self-hosted-runners.md
+  - Project:
+      - Ecosystem: ecosystem.md
+      - Governance: governance.md
+      - Roadmap: roadmap.md
 
 markdown_extensions:
   - tables
