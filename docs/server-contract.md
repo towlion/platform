@@ -17,6 +17,10 @@ This document defines the contract between the platform infrastructure (bootstra
   credentials/                          # Per-app credential files (created by create-app-credentials.sh)
     <app-name>.env                      #   DB_USER, DB_PASSWORD, S3_ACCESS_KEY, S3_SECRET_KEY
   infrastructure/                       # Ops scripts (copied from platform repo by bootstrap)
+    deploy-blue-green.sh                #   Blue-green zero-downtime deploy
+    verify-backup.sh                    #   Backup restore verification
+    rotate-credentials.sh               #   Credential rotation without downtime
+  infrastructure/                       # Ops scripts (copied from platform repo by bootstrap)
     backup-postgres.sh
     restore-postgres.sh
     check-alerts.sh
@@ -33,6 +37,7 @@ This document defines the contract between the platform infrastructure (bootstra
 
 /opt/apps/                              # Application root (created by bootstrap-server.sh)
   <app-name>/                           # Cloned app repo (created manually by admin)
+    .deploy-slot                        # Active blue-green slot ("blue" or "green")
     deploy/
       .env                              # App runtime config (created manually from env.template)
       docker-compose.yml                # App services (joins towlion network)
@@ -66,13 +71,13 @@ This document defines the contract between the platform infrastructure (bootstra
 
 7. **Push to main** — Triggers `deploy.yml`:
    - SSHes into the server as `deploy`
-   - `cd /opt/apps/<name> && git pull origin main`
-   - Creates the app database if it doesn't exist (via platform postgres)
-   - Sources per-app credentials from `/opt/platform/credentials/<name>.env` (if present) and updates `deploy/.env` with isolated DB/S3 values
-   - `docker compose -p <name> -f deploy/docker-compose.yml up -d --build`
-   - Runs Alembic migrations inside the app container
-   - Writes a Caddyfile to `/opt/platform/caddy-apps/<name>.caddy`
-   - Reloads Caddy to pick up the new route
+   - Calls `deploy-blue-green.sh` which performs a zero-downtime blue-green deploy:
+     - Reads current slot from `/opt/apps/<name>/.deploy-slot` (defaults to "blue")
+     - Pulls latest code, injects credentials, builds and starts the next slot
+     - Waits for Docker healthcheck, runs Alembic migrations
+     - Swaps Caddyfile to point to the new slot, reloads Caddy
+     - Verifies external health, then stops the old slot
+     - On any failure: tears down the new slot, old slot keeps serving traffic
 
 ## App Workflow Server Assumptions
 
@@ -105,6 +110,9 @@ All scripts live in the platform repo under `infrastructure/` and are copied to 
 | `update-images.sh` | Pull latest Docker images and recreate containers | Cron: weekly Sunday at 03:00 |
 | `usage-report.sh` | Generate 6-section resource usage report | Manual (`bash`) |
 | `scan-images.sh` | Scan running container images for vulnerabilities (Trivy) | Cron: weekly Sunday at 04:00 |
+| `deploy-blue-green.sh` | Zero-downtime blue-green deploy with automatic rollback | Called by `deploy.yml` workflow |
+| `verify-backup.sh` | Restore backups to temp DB and verify integrity | Cron: weekly Sunday at 05:00 |
+| `rotate-credentials.sh` | Rotate PostgreSQL/MinIO credentials without downtime | Manual (`bash <script> <app-name>`) |
 
 ## Server Hardening
 
@@ -170,12 +178,12 @@ import /etc/caddy/apps/*.caddy
 
 The `caddy-apps/` directory is bind-mounted into the Caddy container at `/etc/caddy/apps/`. App workflows write per-app `.caddy` files into this directory.
 
-**Production** (`deploy.yml`) writes `/opt/platform/caddy-apps/<name>.caddy`:
+**Production** (`deploy.yml`) writes `/opt/platform/caddy-apps/<name>.caddy` via `deploy-blue-green.sh`. Container names include the active slot:
 
 ```
 app.example.com {
     import security_headers
-    reverse_proxy <name>-app-1:8000
+    reverse_proxy <name>-<slot>-app-1:8000
 }
 ```
 

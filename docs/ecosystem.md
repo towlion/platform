@@ -31,6 +31,8 @@ The meta repository for the ecosystem. Contains:
 - Architecture documentation
 - Platform specification
 - Deployment guides
+- Developer CLI (`cli/towlion`) — see [CLI reference](cli.md)
+- Infrastructure scripts (blue-green deploy, backup verification, credential rotation)
 
 ### Application Template ([`towlion/app-template`](https://github.com/towlion/app-template))
 

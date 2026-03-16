@@ -1368,7 +1368,8 @@ fi
 
 SCRIPT_DIR="/opt/platform/infrastructure"
 for script in create-app-credentials.sh backup-postgres.sh restore-postgres.sh \
-              check-alerts.sh update-images.sh usage-report.sh scan-images.sh; do
+              check-alerts.sh update-images.sh usage-report.sh scan-images.sh \
+              deploy-blue-green.sh verify-backup.sh rotate-credentials.sh; do
   SRC_SCRIPT="$(dirname "$0")/$script"
   if [[ -f "$SRC_SCRIPT" ]]; then
     cp "$SRC_SCRIPT" "$SCRIPT_DIR/$script"
@@ -1416,6 +1417,15 @@ if echo "$DEPLOY_CRON" | grep -q "scan-images"; then
 else
   DEPLOY_CRON=$(echo "$DEPLOY_CRON"; echo "$SCAN_CRON")
   info "Image scan cron job added (weekly Sunday 04:00)"
+fi
+
+# Weekly backup verification — Sundays at 05:00 (after image scan at 04:00)
+VERIFY_CRON="0 5 * * 0 /opt/platform/infrastructure/verify-backup.sh --all >> /var/log/towlion-verify-backup.log 2>&1"
+if echo "$DEPLOY_CRON" | grep -q "verify-backup"; then
+  info "Backup verification cron job already exists"
+else
+  DEPLOY_CRON=$(echo "$DEPLOY_CRON"; echo "$VERIFY_CRON")
+  info "Backup verification cron job added (weekly Sunday 05:00)"
 fi
 
 echo "$DEPLOY_CRON" | crontab -u deploy -
