@@ -80,7 +80,7 @@ done
 echo "[$TIMESTAMP] Checking backup freshness..."
 BACKUP_DIR="/data/backups/postgres"
 if [ -d "$BACKUP_DIR" ]; then
-    latest_backup=$(find "$BACKUP_DIR" -name "*.sql.gz" -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | awk '{print $1}')
+    latest_backup=$(find "$BACKUP_DIR" -name "*.dump" -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | awk '{print $1}')
     if [ -n "$latest_backup" ]; then
         age_hours=$(( ($(date +%s) - ${latest_backup%.*}) / 3600 ))
         if [ "$age_hours" -gt 36 ]; then
