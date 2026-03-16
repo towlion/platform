@@ -45,3 +45,19 @@ Key rules from the Towlion platform specification:
 - All on `towlion` Docker network
 - Compose file: `/opt/platform/docker-compose.yml`
 - Per-app credentials: `/opt/platform/credentials/<app>.env` (DB_USER, DB_PASSWORD, S3_ACCESS_KEY, S3_SECRET_KEY)
+
+## Observability
+- All apps emit structured JSON logs (python-json-logger) to stdout, collected by Promtail → Loki
+- Grafana has 3 dashboards: platform-overview, app-dashboard, resource-metrics
+- 3 alert rules: error-rate-spike, container-down, disk-usage-high
+- Docker event audit logging via systemd service → /var/log/docker-audit.log → Promtail → Loki
+
+## Reusable Workflows (towlion/.github)
+- 4 reusable workflows: validate, test-python, deploy, preview
+- All app repos call these instead of defining their own workflow logic
+- Deploy/preview use `caddyfile-template` input with placeholder substitution
+
+## Security Additions
+- Rate limiting: slowapi, 60/min per IP, `/health` exempt
+- Read-only container filesystem: `read_only: true` + tmpfs mounts
+- Docker event audit logging (job=docker-audit in Loki)
