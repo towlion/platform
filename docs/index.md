@@ -59,10 +59,6 @@ The goal is to make it easy to:
 - Self-host them on your own server
 - Share them with others through GitHub
 
-## Project Status
-
-Phases 1–6 complete. The platform provides a fully automated GitHub-driven deployment ecosystem with infrastructure bootstrap, multi-app hosting, observability, and self-hosting support.
-
 ## License
 
 MIT License
