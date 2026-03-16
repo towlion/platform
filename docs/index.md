@@ -20,6 +20,8 @@ GitHub repository → GitHub Actions → SSH deploy → server runtime
 
 Each repository contains everything required to deploy itself. Push code, and your application is live.
 
+See [Scope and Design Boundaries](scope.md) for what the platform does and does not do.
+
 ## Key Features
 
 - **GitHub-native deployment** — no custom CLI or dashboard needed

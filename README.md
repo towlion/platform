@@ -10,7 +10,8 @@ Full documentation is available at **[towlion.github.io/platform](https://towlio
 
 - [Architecture](https://towlion.github.io/platform/architecture/) — platform design, tech stack, diagrams
 - [App Specification](https://towlion.github.io/platform/spec/) — application contract (ports, endpoints, env vars)
-- [Deployment](https://towlion.github.io/platform/deployment/) — CI/CD pipeline, zero-downtime deploys, migrations
+- [Scope](https://towlion.github.io/platform/scope/) — design boundaries and when to use something else
+- [Deployment](https://towlion.github.io/platform/deployment/) — CI/CD pipeline, deploy behavior, migrations
 - [Self-Hosting](https://towlion.github.io/platform/self-hosting/) — fork model, server requirements, bootstrap
 - [Preview Environments](https://towlion.github.io/platform/preview-environments/) — PR previews, DNS, cleanup
 - [Ecosystem](https://towlion.github.io/platform/ecosystem/) — org structure, app template, multi-app hosting

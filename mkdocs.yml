@@ -31,6 +31,7 @@ extra_css:
 
 nav:
   - Home: index.md
+  - Scope: scope.md
   - Tutorial: tutorial.md
   - Architecture: architecture.md
   - App Specification: spec.md

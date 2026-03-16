@@ -11,7 +11,7 @@ docs/                  # All documentation (Markdown)
   index.md             # Landing page
   architecture.md      # Platform design, tech stack, diagrams
   spec.md              # Application contract (ports, endpoints, env vars)
-  deployment.md        # CI/CD pipeline, zero-downtime deploys, migrations
+  deployment.md        # CI/CD pipeline, deploy behavior, migrations
   self-hosting.md      # Fork model, server requirements, bootstrap
   preview-environments.md  # PR previews, DNS, cleanup
   ecosystem.md         # Org structure, app template, multi-app hosting

@@ -39,26 +39,27 @@ Deployment command:
 docker compose up -d --build
 ```
 
-## Zero-Downtime Deployments
+## Deploy Behavior
 
-The platform uses rolling updates to keep applications available during deployments.
+The platform rebuilds and restarts containers on each deploy. There is a brief gap where the application is unavailable.
 
 ```
-Current version (v1) running
+Stop current container
         │
         ▼
-Start new container (v2)
+Rebuild image from source
         │
+        ▼
+Start new container
+        │
+        ▼
 Health check passes
         │
         ▼
-Switch traffic to v2
-        │
-        ▼
-Stop v1
+Caddy routes traffic
 ```
 
-Docker Compose starts the new container before removing the old one. The reverse proxy (Caddy) only forwards traffic to healthy services.
+During the rebuild and restart, Caddy returns 502 for requests to the application. This gap is typically a few seconds. For the target use case — small apps with low traffic — this is acceptable. See [Scope and Design Boundaries](scope.md) for when to consider alternatives.
 
 ### Docker Health Check Configuration
 
@@ -74,7 +75,7 @@ services:
       retries: 5
 ```
 
-If the health check fails, traffic stays on the previous version.
+If the health check fails, Docker will restart the container according to the `restart: always` policy.
 
 ## Database Migrations
 
@@ -131,26 +132,26 @@ curl https://app.example.com/health
 
 ## Environment Promotion
 
-The platform supports promotion through environments:
+The platform has two environments:
 
 ```
 Pull Request → Preview environment
-Merge to develop → Staging deployment
 Merge to main → Production deployment
 ```
 
 | Branch | Environment |
 |---|---|
 | PR branch | Preview |
-| `develop` | Staging |
 | `main` | Production |
+
+Preview environments are created automatically for pull requests and cleaned up when the PR is closed. See [Preview Environments](preview-environments.md) for details.
 
 ## Platform Capabilities Summary
 
 | Feature | Implementation |
 |---|---|
 | CI/CD | GitHub Actions |
-| Zero-downtime deploys | Rolling container updates |
+| Deploy pipeline | Rebuild and restart on push to main |
 | Database migrations | Alembic |
 | Preview environments | PR deployments |
 | Object storage | MinIO |

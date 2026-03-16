@@ -58,5 +58,5 @@ Important notes:
 ## See also
 
 - [Tutorial](tutorial.md) — step-by-step walkthrough with detailed commands
-- [Deployment](deployment.md) — pipeline internals and zero-downtime strategy
+- [Deployment](deployment.md) — pipeline internals and deploy behavior
 - [Self-Hosting](self-hosting.md) — fork model and infrastructure overview

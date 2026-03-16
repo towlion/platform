@@ -236,7 +236,7 @@ git commit -m "feat: add new feature"
 git push origin main
 ```
 
-GitHub Actions runs the deployment pipeline automatically. The platform uses [rolling updates](deployment.md#zero-downtime-deployments) so your application stays available during deploys.
+GitHub Actions runs the deployment pipeline automatically. Your application will be briefly unavailable during the rebuild (typically a few seconds).
 
 To pull upstream changes from the original repository:
 
