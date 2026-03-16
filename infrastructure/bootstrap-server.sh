@@ -84,7 +84,7 @@ maxretry = 5
 enabled = true
 port = ssh
 filter = sshd
-logpath = /var/log/auth.log
+backend = systemd
 maxretry = 5
 EOF
 
