@@ -14,9 +14,10 @@ error() { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
 MARKER="/opt/platform/.bootstrapped"
 
 # Optional environment variables:
-#   ACME_EMAIL   - Email for Let's Encrypt TLS certificates (required for production)
-#   OPS_DOMAIN   - Domain for Grafana dashboard (e.g., ops.example.com)
-#   ALERT_REPO   - GitHub repo for alert issues (e.g., youruser/platform)
+#   ACME_EMAIL      - Email for Let's Encrypt TLS certificates (required for production)
+#   OPS_DOMAIN      - Domain for Grafana dashboard (e.g., ops.example.com)
+#   ALERT_REPO      - GitHub repo for alert issues (e.g., youruser/platform)
+#   ENABLE_METRICS  - Set to "true" to start Prometheus, cAdvisor, and node-exporter
 
 # --- Preflight ---
 
@@ -141,7 +142,7 @@ fi
 # --- Directories ---
 
 for dir in \
-  /data/postgres /data/redis /data/minio /data/caddy /data/loki /data/grafana \
+  /data/postgres /data/redis /data/minio /data/caddy /data/loki /data/grafana /data/prometheus \
   /data/backups/postgres \
   /opt/apps /opt/platform /opt/platform/caddy-apps /opt/platform/credentials \
   /opt/platform/grafana/provisioning/datasources \
@@ -154,6 +155,8 @@ chown -R deploy:deploy /data /opt/apps /opt/platform
 # Grafana runs as UID 472, Loki as UID 10001 inside their containers
 chown -R 472:472 /data/grafana
 chown -R 10001:10001 /data/loki
+# Prometheus runs as nobody (UID 65534) inside its container
+chown -R 65534:65534 /data/prometheus
 info "Directory structure created (/data/*, /opt/apps, /opt/platform)"
 
 # --- Docker Network ---
@@ -186,6 +189,12 @@ ACME_EMAIL=${ACME_EMAIL:-admin@localhost}
 OPS_DOMAIN=${OPS_DOMAIN:-localhost}
 ALERT_REPO=${ALERT_REPO:-}
 EOF
+
+  # Conditionally enable metrics compose profile
+  if [[ "${ENABLE_METRICS:-}" == "true" ]]; then
+    echo "COMPOSE_PROFILES=metrics" >> "$ENV_FILE"
+    info "Resource metrics enabled (COMPOSE_PROFILES=metrics)"
+  fi
 
   chmod 600 "$ENV_FILE"
   chown deploy:deploy "$ENV_FILE"
@@ -297,6 +306,32 @@ EOF
   info "Promtail config created at $PROMTAIL_CONFIG"
 fi
 
+# --- Prometheus Config ---
+
+PROMETHEUS_CONFIG="/opt/platform/prometheus.yml"
+if [[ -f "$PROMETHEUS_CONFIG" ]]; then
+  info "Prometheus config already exists"
+else
+  cat > "$PROMETHEUS_CONFIG" <<'EOF'
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+EOF
+
+  chown deploy:deploy "$PROMETHEUS_CONFIG"
+  info "Prometheus config created at $PROMETHEUS_CONFIG"
+fi
+
 # --- Grafana Provisioning ---
 
 GRAFANA_DS="/opt/platform/grafana/provisioning/datasources/datasources.yml"
@@ -311,6 +346,10 @@ datasources:
     access: proxy
     url: http://loki:3100
     isDefault: true
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
 EOF
 
   chown deploy:deploy "$GRAFANA_DS"
@@ -439,6 +478,316 @@ DASHEOF
 
   chown deploy:deploy "$GRAFANA_DASHBOARD"
   info "Grafana dashboard created"
+fi
+
+# --- Resource Metrics Dashboard ---
+
+METRICS_DASHBOARD="/opt/platform/grafana/dashboards/resource-metrics.json"
+if [[ -f "$METRICS_DASHBOARD" ]]; then
+  info "Resource metrics dashboard already exists"
+else
+  cat > "$METRICS_DASHBOARD" <<'METRICSDASHEOF'
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "title": "CPU Usage",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "" },
+      "targets": [
+        {
+          "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 60 },
+              { "color": "red", "value": 85 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Memory Usage",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "" },
+      "targets": [
+        {
+          "expr": "100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 70 },
+              { "color": "red", "value": 90 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Disk Usage",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "" },
+      "targets": [
+        {
+          "expr": "100 - (node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"} * 100)",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 70 },
+              { "color": "red", "value": 85 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Uptime",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "" },
+      "targets": [
+        {
+          "expr": "node_time_seconds - node_boot_time_seconds",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      }
+    },
+    {
+      "title": "CPU Over Time",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "" },
+      "targets": [
+        {
+          "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+          "legendFormat": "CPU %",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "max": 100,
+          "custom": { "fillOpacity": 20 }
+        }
+      }
+    },
+    {
+      "title": "Memory Over Time",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "" },
+      "targets": [
+        {
+          "expr": "node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes",
+          "legendFormat": "Used",
+          "refId": "A"
+        },
+        {
+          "expr": "node_memory_MemTotal_bytes",
+          "legendFormat": "Total",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": { "fillOpacity": 20 }
+        }
+      }
+    },
+    {
+      "title": "Disk I/O",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "datasource": { "type": "prometheus", "uid": "" },
+      "targets": [
+        {
+          "expr": "rate(node_disk_read_bytes_total[5m])",
+          "legendFormat": "Read {{device}}",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(node_disk_written_bytes_total[5m])",
+          "legendFormat": "Write {{device}}",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "custom": { "fillOpacity": 20 }
+        }
+      }
+    },
+    {
+      "title": "Network I/O",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "datasource": { "type": "prometheus", "uid": "" },
+      "targets": [
+        {
+          "expr": "rate(node_network_receive_bytes_total{device!=\"lo\"}[5m])",
+          "legendFormat": "RX {{device}}",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(node_network_transmit_bytes_total{device!=\"lo\"}[5m])",
+          "legendFormat": "TX {{device}}",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "custom": { "fillOpacity": 20 }
+        }
+      }
+    },
+    {
+      "title": "Container Overview",
+      "type": "table",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "" },
+      "targets": [
+        {
+          "expr": "rate(container_cpu_usage_seconds_total{name!=\"\"}[5m]) * 100",
+          "legendFormat": "{{name}}",
+          "refId": "A",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "expr": "container_memory_usage_bytes{name!=\"\"}",
+          "legendFormat": "{{name}}",
+          "refId": "B",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "expr": "container_spec_memory_limit_bytes{name!=\"\"}",
+          "legendFormat": "{{name}}",
+          "refId": "C",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "expr": "rate(container_network_receive_bytes_total{name!=\"\"}[5m])",
+          "legendFormat": "{{name}}",
+          "refId": "D",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "expr": "rate(container_network_transmit_bytes_total{name!=\"\"}[5m])",
+          "legendFormat": "{{name}}",
+          "refId": "E",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        }
+      ]
+    },
+    {
+      "title": "CPU per Container",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 },
+      "datasource": { "type": "prometheus", "uid": "" },
+      "targets": [
+        {
+          "expr": "rate(container_cpu_usage_seconds_total{name=~\"$container\"}[5m]) * 100",
+          "legendFormat": "{{name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": { "fillOpacity": 20 }
+        }
+      }
+    },
+    {
+      "title": "Memory per Container",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 },
+      "datasource": { "type": "prometheus", "uid": "" },
+      "targets": [
+        {
+          "expr": "container_memory_usage_bytes{name=~\"$container\"}",
+          "legendFormat": "{{name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": { "fillOpacity": 20 }
+        }
+      }
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["towlion", "metrics"],
+  "templating": {
+    "list": [
+      {
+        "name": "container",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "" },
+        "query": "label_values(container_cpu_usage_seconds_total{name!=\"\"}, name)",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".+"
+      }
+    ]
+  },
+  "time": { "from": "now-1h", "to": "now" },
+  "title": "Resource Metrics",
+  "uid": "towlion-resource-metrics"
+}
+METRICSDASHEOF
+
+  chown deploy:deploy "$METRICS_DASHBOARD"
+  info "Resource metrics dashboard created"
 fi
 
 # --- Grafana Caddy Route ---
@@ -640,6 +989,83 @@ services:
           cpus: '0.25'
           memory: 128M
 
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    restart: unless-stopped
+    profiles:
+      - metrics
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=7d'
+      - '--storage.tsdb.retention.size=500MB'
+    volumes:
+      - /data/prometheus:/prometheus
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - towlion
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "-O", "/dev/null", "http://localhost:9090/-/healthy"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    restart: unless-stopped
+    profiles:
+      - metrics
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /dev/disk:/dev/disk:ro
+    networks:
+      - towlion
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "-O", "/dev/null", "http://localhost:8080/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+        reservations:
+          cpus: '0.10'
+          memory: 64M
+
+  node-exporter:
+    image: prom/node-exporter:v1.8.1
+    restart: unless-stopped
+    profiles:
+      - metrics
+    pid: host
+    volumes:
+      - /:/host:ro,rslave
+    command:
+      - '--path.rootfs=/host'
+    networks:
+      - towlion
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 64M
+        reservations:
+          cpus: '0.10'
+          memory: 32M
+
 networks:
   towlion:
     external: true
@@ -667,6 +1093,18 @@ for service in postgres redis minio caddy loki promtail grafana; do
     ALL_HEALTHY=false
   fi
 done
+
+# Check metrics services if profile is enabled
+if docker compose ps --format json prometheus 2>/dev/null | grep -q '"running"'; then
+  for service in prometheus cadvisor node-exporter; do
+    if docker compose ps --format json "$service" 2>/dev/null | grep -q '"running"'; then
+      info "$service is running"
+    else
+      warn "$service may not be running yet"
+      ALL_HEALTHY=false
+    fi
+  done
+fi
 
 if $ALL_HEALTHY; then
   info "All platform services are running"
@@ -738,6 +1176,11 @@ echo "  - Caddy 2 (ports 80, 443)"
 echo "  - Loki 3.0 (port 3100, internal)"
 echo "  - Promtail 3.0 (log collector)"
 echo "  - Grafana 11.0 (dashboard, via Caddy at ops domain)"
+if grep -q "COMPOSE_PROFILES=metrics" "$ENV_FILE" 2>/dev/null; then
+  echo "  - Prometheus v2.53 (port 9090, internal)"
+  echo "  - cAdvisor v0.49 (container metrics)"
+  echo "  - Node Exporter v1.8 (host metrics)"
+fi
 echo
 echo "Credentials: $ENV_FILE"
 if [[ -f "$ENV_FILE" ]]; then
@@ -781,4 +1224,10 @@ if [[ -z "${ALERT_REPO:-}" ]]; then
   echo
   echo -e "${YELLOW}  OPTIONAL: Set ALERT_REPO in $ENV_FILE (e.g., youruser/platform) for GitHub issue alerts.${NC}"
   echo "  Also set GITHUB_TOKEN for issue creation."
+fi
+
+if ! grep -q "COMPOSE_PROFILES=metrics" "$ENV_FILE" 2>/dev/null; then
+  echo
+  echo "  To enable resource metrics: add COMPOSE_PROFILES=metrics to $ENV_FILE"
+  echo "  Or re-run: sudo ENABLE_METRICS=true bash bootstrap-server.sh"
 fi

@@ -58,7 +58,7 @@ fi
 # --- Directories ---
 
 ALL_DIRS_OK=true
-for dir in /data/postgres /data/redis /data/minio /data/caddy /data/loki /data/grafana /data/backups/postgres /opt/apps /opt/platform /opt/platform/credentials; do
+for dir in /data/postgres /data/redis /data/minio /data/caddy /data/loki /data/grafana /data/prometheus /data/backups/postgres /opt/apps /opt/platform /opt/platform/credentials; do
   if [[ ! -d "$dir" ]]; then
     ALL_DIRS_OK=false
     fail "Directory missing: $dir"
@@ -103,6 +103,17 @@ else
       fail "$service is not running"
     fi
   done
+
+  # Metrics services (optional — only checked if running)
+  if docker compose -f "$COMPOSE_FILE" ps --format json prometheus 2>/dev/null | grep -q '"running"'; then
+    for service in prometheus cadvisor node-exporter; do
+      if docker compose -f "$COMPOSE_FILE" ps --format json "$service" 2>/dev/null | grep -q '"running"'; then
+        pass "$service is running"
+      else
+        fail "$service is not running"
+      fi
+    done
+  fi
 fi
 
 # --- Service Health ---
@@ -145,6 +156,16 @@ if wget -qO- http://localhost:3000/api/health 2>/dev/null | grep -q "ok"; then
   pass "Grafana is healthy"
 else
   fail "Grafana is not healthy"
+fi
+
+# --- Prometheus Health (optional) ---
+
+if docker compose -f "$COMPOSE_FILE" ps --format json prometheus 2>/dev/null | grep -q '"running"'; then
+  if wget -qO- http://localhost:9090/-/healthy 2>/dev/null | grep -q "Prometheus Server is Healthy"; then
+    pass "Prometheus is healthy"
+  else
+    fail "Prometheus is not healthy"
+  fi
 fi
 
 # --- Firewall ---
