@@ -13,10 +13,8 @@ towlion/
   hello-world          # Multi-app deployment test
   starter-app          # Created from app-template
   wit                  # Work Item Tracker (Kanban board)
-  practice-timer       # Practice session timer for musicians
 ```
 
-Planned application repos include `uku-companion`, `fretboard-trainer`, and `chord-transposer`.
 
 ## Repository Types
 
