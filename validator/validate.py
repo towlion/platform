@@ -254,7 +254,7 @@ class Validator:
             rel_root = os.path.relpath(root, self.app_dir)
             skip = False
             for part in rel_root.split(os.sep):
-                if part.startswith(".") or part in ("node_modules", "__pycache__", "venv", ".venv"):
+                if part.startswith(".") or part in ("node_modules", "__pycache__", "venv", ".venv", "_platform"):
                     skip = True
                     break
             if skip:
