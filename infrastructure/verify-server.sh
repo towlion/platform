@@ -144,7 +144,7 @@ fi
 
 # --- Loki Health ---
 
-if wget -qO- http://localhost:3100/ready 2>/dev/null | grep -q "ready"; then
+if docker compose -f "$COMPOSE_FILE" exec -T loki wget -qO- http://localhost:3100/ready 2>/dev/null | grep -q "ready"; then
   pass "Loki is ready"
 else
   fail "Loki is not ready"
@@ -152,7 +152,7 @@ fi
 
 # --- Grafana Health ---
 
-if wget -qO- http://localhost:3000/api/health 2>/dev/null | grep -q "ok"; then
+if docker compose -f "$COMPOSE_FILE" exec -T grafana wget -qO- http://localhost:3000/api/health 2>/dev/null | grep -q "ok"; then
   pass "Grafana is healthy"
 else
   fail "Grafana is not healthy"
@@ -161,7 +161,7 @@ fi
 # --- Prometheus Health (optional) ---
 
 if docker compose -f "$COMPOSE_FILE" ps --format json prometheus 2>/dev/null | grep -q '"running"'; then
-  if wget -qO- http://localhost:9090/-/healthy 2>/dev/null | grep -q "Prometheus Server is Healthy"; then
+  if docker compose -f "$COMPOSE_FILE" exec -T prometheus wget -qO- http://localhost:9090/-/healthy 2>/dev/null | grep -q "Prometheus Server is Healthy"; then
     pass "Prometheus is healthy"
   else
     fail "Prometheus is not healthy"
@@ -190,11 +190,11 @@ fi
 
 # --- Firewall ---
 
-if ufw status 2>/dev/null | grep -q "Status: active"; then
+if sudo -n ufw status 2>/dev/null | grep -q "Status: active"; then
   pass "UFW is active"
   UFW_OK=true
   for port in 22 80 443; do
-    if ! ufw status 2>/dev/null | grep -q "${port}/tcp.*ALLOW"; then
+    if ! sudo -n ufw status 2>/dev/null | grep -q "${port}/tcp.*ALLOW"; then
       UFW_OK=false
       fail "UFW: port $port/tcp not allowed"
     fi
