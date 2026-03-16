@@ -50,7 +50,7 @@ This document defines the contract between the platform infrastructure (bootstra
 
 ## Bootstrap to Deploy Lifecycle
 
-1. **Bootstrap the server** — Run `sudo bash infrastructure/bootstrap-server.sh` on a fresh Debian 12 machine. This creates the directory layout above, installs Docker, creates the `deploy` user, generates platform credentials, starts the 7 platform services, copies infrastructure scripts, and installs cron jobs.
+1. **Bootstrap the server** — Run `sudo bash infrastructure/bootstrap-server.sh` on a fresh Debian machine. This creates the directory layout above, installs Docker, creates the `deploy` user, generates platform credentials, starts the 7 platform services, copies infrastructure scripts, and installs cron jobs.
 
 2. **Configure DNS** — Point app domains and `*.preview.<domain>` to the server IP.
 
@@ -94,7 +94,7 @@ All scripts live in the platform repo under `infrastructure/` and are copied to 
 
 | Script | Purpose | Invocation |
 |---|---|---|
-| `bootstrap-server.sh` | Transform fresh Debian 12 into running platform | Manual (`sudo bash`) |
+| `bootstrap-server.sh` | Transform fresh Debian into running platform | Manual (`sudo bash`) |
 | `verify-server.sh` | Read-only health check of server state | Manual (`bash`) |
 | `create-app-credentials.sh` | Provision per-app PostgreSQL user + MinIO bucket | Manual (`bash <script> <app-name>`) |
 | `backup-postgres.sh` | Per-database `pg_dump` with 7-day retention | Cron: daily at 02:00 |

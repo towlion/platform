@@ -29,7 +29,7 @@ PostgreSQL Redis   MinIO    Workers
 
 ### Infrastructure
 
-- **Debian 12** — host operating system
+- **Debian** — host operating system
 - **Docker** — container runtime
 - **Docker Compose** — service orchestration
 

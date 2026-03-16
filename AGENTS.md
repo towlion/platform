@@ -20,7 +20,7 @@ docs/                  # All documentation (Markdown)
   tutorial.md          # Step-by-step deployment walkthrough
   server-contract.md   # Platform-to-workflow interface contract
 infrastructure/        # Server bootstrap and ops scripts
-  bootstrap-server.sh  # Debian 12 -> running platform (idempotent)
+  bootstrap-server.sh  # Debian -> running platform (idempotent)
   verify-server.sh     # Read-only server health check
   create-app-credentials.sh  # Per-app DB/S3 credential provisioning
   check-alerts.sh      # Cron health checker -> GitHub Issues
@@ -42,7 +42,7 @@ mkdocs.yml             # MkDocs Material site configuration
 
 Towlion is a single-server micro-PaaS where GitHub acts as the control plane. Key concepts:
 
-- **Tech stack**: Debian 12, Docker, Caddy, FastAPI, Next.js, PostgreSQL, Redis, MinIO, Celery
+- **Tech stack**: Debian, Docker, Caddy, FastAPI, Next.js, PostgreSQL, Redis, MinIO, Celery
 - **Deployment model**: GitHub Actions SSH into a server and run `docker compose up -d --build`
 - **Self-hosting**: Users fork a repo, configure GitHub secrets, push, and the app deploys
 - **Multi-app**: One server hosts multiple apps via subdomain routing through Caddy

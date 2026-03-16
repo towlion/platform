@@ -9,9 +9,9 @@ Establish the core runtime environment.
 - Define architecture and documentation
 - Create application template repository
 - Set up Docker runtime, Caddy, PostgreSQL, Redis, MinIO
-- Server bootstrap automation (`infrastructure/bootstrap-server.sh` that installs Docker, Caddy, and platform services on a fresh Debian 12 server)
+- Server bootstrap automation (`infrastructure/bootstrap-server.sh` that installs Docker, Caddy, and platform services on a fresh Debian server)
 
-**Done when:** A fresh Debian 12 server can be bootstrapped to a running platform state by executing a single script. All platform services (PostgreSQL, Redis, MinIO, Caddy) are running and accessible.
+**Done when:** A fresh Debian server can be bootstrapped to a running platform state by executing a single script. All platform services (PostgreSQL, Redis, MinIO, Caddy) are running and accessible.
 
 **Status:** Complete.
 

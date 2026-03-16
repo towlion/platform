@@ -29,7 +29,7 @@ Walk me through these 5 phases:
 - Commit with conventional commit messages (feat:, fix:, etc.)
 
 ### Phase 3: Provision server
-- Run `bootstrap-server.sh` on a fresh Debian 12 server (installs Docker, creates directories, starts platform services)
+- Run `bootstrap-server.sh` on a fresh Debian server (installs Docker, creates directories, starts platform services)
 - Set up DNS A record: <your-domain.com> -> <server-ip>
 - Generate a deploy SSH key pair for the `deploy` user
 - Run `verify-server.sh` to confirm the platform is healthy

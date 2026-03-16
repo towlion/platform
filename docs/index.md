@@ -35,7 +35,7 @@ Each repository contains everything required to deploy itself. Push code, and yo
 
 | Layer | Technology | Purpose |
 |---|---|---|
-| OS | Debian 12 | Host operating system |
+| OS | Debian | Host operating system |
 | Containers | Docker + Compose | Runtime and orchestration |
 | Reverse proxy | Caddy | TLS + routing |
 | Backend | FastAPI (Python) | Application API |

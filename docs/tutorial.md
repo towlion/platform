@@ -10,7 +10,7 @@ This tutorial walks you through deploying a Towlion application from fork to run
 You will need:
 
 - A **GitHub account**
-- A **Debian 12 server** (VPS from any provider — Hetzner, DigitalOcean, Linode, etc.)
+- A **Debian server** (VPS from any provider — Hetzner, DigitalOcean, Linode, etc.)
 - A **domain name** you control (for DNS configuration)
 - A local machine with **Git** and **SSH** installed
 
@@ -36,7 +36,7 @@ cd app-template
 
 ## Step 2: Provision a server
 
-Create a Debian 12 server from your preferred provider. Make sure:
+Create a Debian server from your preferred provider. Make sure:
 
 - Ports **22**, **80**, and **443** are open in the firewall
 - You can SSH in as a non-root user with sudo access

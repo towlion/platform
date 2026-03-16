@@ -75,7 +75,7 @@ Optional secrets:
 To deploy an application from a fork:
 
 1. **Fork the repository** on GitHub
-2. **Create a server** (Debian 12, meeting the minimum requirements)
+2. **Create a server** (Debian, meeting the minimum requirements)
 3. **Run the bootstrap script** to install Docker and dependencies
 4. **Configure DNS** — point your domain to the server IP
 5. **Configure GitHub secrets** — add the required secrets to your fork
@@ -83,7 +83,7 @@ To deploy an application from a fork:
 
 ### Bootstrap Script
 
-The repository includes a single bootstrap script that transforms a fresh Debian 12 server into a ready-to-deploy platform:
+The repository includes a single bootstrap script that transforms a fresh Debian server into a ready-to-deploy platform:
 
 ```bash
 sudo ACME_EMAIL=you@example.com OPS_DOMAIN=ops.example.com bash infrastructure/bootstrap-server.sh
