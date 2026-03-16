@@ -105,7 +105,7 @@ for db_name in "${DATABASES[@]}"; do
 
   if [ -z "$LATEST_BACKUP" ]; then
     error "No backup found for $db_name"
-    ((FAILED++))
+    FAILED=$((FAILED + 1))
     continue
   fi
 
@@ -124,7 +124,7 @@ for db_name in "${DATABASES[@]}"; do
   if ! docker compose -f "$COMPOSE_FILE" exec -T postgres \
     psql -U postgres -c "CREATE DATABASE ${VERIFY_DB}" >/dev/null 2>&1; then
     error "Failed to create temp database $VERIFY_DB"
-    ((FAILED++))
+    FAILED=$((FAILED + 1))
     continue
   fi
 
@@ -169,10 +169,10 @@ for db_name in "${DATABASES[@]}"; do
     fi
 
     info "PASS: $db_name backup verified"
-    ((PASSED++))
+    PASSED=$((PASSED + 1))
   else
     error "FAIL: $db_name backup verification failed"
-    ((FAILED++))
+    FAILED=$((FAILED + 1))
   fi
 
   # Drop temp database
