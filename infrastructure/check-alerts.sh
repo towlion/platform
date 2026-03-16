@@ -3,6 +3,7 @@ set -euo pipefail
 
 # check-alerts.sh
 # Cron script (every 5 min) that checks container health, disk, memory,
+# TLS certs, restart counts, backup freshness, HTTP endpoints,
 # and creates GitHub Issues on failure.
 
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
@@ -45,11 +46,69 @@ if [[ $MEMORY_USAGE -gt 90 ]]; then
     ALERTS+=("Memory usage at ${MEMORY_USAGE}% (threshold: 90%)")
 fi
 
-# 4. Log docker stats for Promtail pickup
+# 4. Check TLS certificate expiry
+echo "[$TIMESTAMP] Checking TLS certificates..."
+for conf in /opt/platform/caddy-apps/*.caddy; do
+    [ -f "$conf" ] || continue
+    domain=$(awk 'NF {print $1; exit}' "$conf")
+    [ -z "$domain" ] && continue
+    [[ "$domain" == "localhost" ]] && continue
+    expiry=$(echo | openssl s_client -connect "$domain:443" -servername "$domain" 2>/dev/null \
+        | openssl x509 -noout -enddate 2>/dev/null | cut -d= -f2)
+    if [ -n "$expiry" ]; then
+        expiry_epoch=$(date -d "$expiry" +%s 2>/dev/null)
+        now_epoch=$(date +%s)
+        if [ -n "$expiry_epoch" ]; then
+            days_left=$(( (expiry_epoch - now_epoch) / 86400 ))
+            if [ "$days_left" -lt 14 ]; then
+                ALERTS+=("TLS cert for $domain expires in $days_left days")
+            fi
+        fi
+    fi
+done
+
+# 5. Check container restart counts
+echo "[$TIMESTAMP] Checking container restart counts..."
+for name in $(docker ps -a --format '{{.Names}}'); do
+    restarts=$(docker inspect --format='{{.RestartCount}}' "$name" 2>/dev/null || echo "0")
+    if [ "$restarts" -gt 3 ]; then
+        ALERTS+=("Container $name has restarted $restarts times")
+    fi
+done
+
+# 6. Check backup freshness
+echo "[$TIMESTAMP] Checking backup freshness..."
+BACKUP_DIR="/data/backups/postgres"
+if [ -d "$BACKUP_DIR" ]; then
+    latest_backup=$(find "$BACKUP_DIR" -name "*.sql.gz" -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | awk '{print $1}')
+    if [ -n "$latest_backup" ]; then
+        age_hours=$(( ($(date +%s) - ${latest_backup%.*}) / 3600 ))
+        if [ "$age_hours" -gt 36 ]; then
+            ALERTS+=("Most recent PostgreSQL backup is $age_hours hours old (threshold: 36h)")
+        fi
+    else
+        ALERTS+=("No PostgreSQL backups found in $BACKUP_DIR")
+    fi
+fi
+
+# 7. Check HTTP endpoint health
+echo "[$TIMESTAMP] Checking HTTP endpoints..."
+for conf in /opt/platform/caddy-apps/*.caddy; do
+    [ -f "$conf" ] || continue
+    domain=$(awk 'NF {print $1; exit}' "$conf")
+    [ -z "$domain" ] && continue
+    [[ "$domain" == "localhost" ]] && continue
+    status=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "https://$domain/health" 2>/dev/null || echo "000")
+    if [ "$status" -lt 200 ] || [ "$status" -ge 300 ]; then
+        ALERTS+=("HTTP health check failed for $domain (status: $status)")
+    fi
+done
+
+# 8. Log docker stats for Promtail pickup
 echo "[$TIMESTAMP] Docker container stats:"
 docker stats --no-stream --format "table {{.Name}}\t{{.MemUsage}}\t{{.MemPerc}}\t{{.CPUPerc}}"
 
-# 5. Create GitHub Issues for each alert
+# 9. Create GitHub Issues for each alert
 if [[ ${#ALERTS[@]} -gt 0 ]]; then
     echo "[$TIMESTAMP] Found ${#ALERTS[@]} alert(s)"
 
