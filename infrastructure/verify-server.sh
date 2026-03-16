@@ -10,8 +10,8 @@ PASS=0
 FAIL=0
 FAILURES=()
 
-pass() { echo -e "${GREEN}[PASS]${NC} $1"; ((PASS++)); }
-fail() { echo -e "${RED}[FAIL]${NC} $1"; ((FAIL++)); FAILURES+=("$1"); }
+pass() { echo -e "${GREEN}[PASS]${NC} $1"; PASS=$((PASS + 1)); }
+fail() { echo -e "${RED}[FAIL]${NC} $1"; FAIL=$((FAIL + 1)); FAILURES+=("$1"); }
 
 # --- OS ---
 
