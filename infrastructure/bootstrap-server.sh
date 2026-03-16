@@ -345,11 +345,13 @@ datasources:
     type: loki
     access: proxy
     url: http://loki:3100
+    uid: towlion-loki
     isDefault: true
   - name: Prometheus
     type: prometheus
     access: proxy
     url: http://prometheus:9090
+    uid: towlion-prometheus
 EOF
 
   chown deploy:deploy "$GRAFANA_DS"
@@ -393,7 +395,7 @@ else
       "title": "Log Stream",
       "type": "logs",
       "gridPos": { "h": 10, "w": 24, "x": 0, "y": 0 },
-      "datasource": { "type": "loki", "uid": "" },
+      "datasource": { "type": "loki", "uid": "towlion-loki" },
       "targets": [
         {
           "expr": "{service=~\".+\"}",
@@ -410,7 +412,7 @@ else
       "title": "Error Rate (per service, 5m)",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 10 },
-      "datasource": { "type": "loki", "uid": "" },
+      "datasource": { "type": "loki", "uid": "towlion-loki" },
       "targets": [
         {
           "expr": "sum by (service) (count_over_time({service=~\".+\"} |= \"ERROR\" [5m]))",
@@ -431,7 +433,7 @@ else
       "title": "Container Logs by App",
       "type": "logs",
       "gridPos": { "h": 10, "w": 12, "x": 12, "y": 10 },
-      "datasource": { "type": "loki", "uid": "" },
+      "datasource": { "type": "loki", "uid": "towlion-loki" },
       "targets": [
         {
           "expr": "{project=~\"$app\"}",
@@ -461,7 +463,7 @@ else
       {
         "name": "app",
         "type": "query",
-        "datasource": { "type": "loki", "uid": "" },
+        "datasource": { "type": "loki", "uid": "towlion-loki" },
         "query": "label_values(project)",
         "refresh": 2,
         "multi": false,
@@ -499,7 +501,7 @@ else
       "title": "CPU Usage",
       "type": "stat",
       "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
-      "datasource": { "type": "prometheus", "uid": "" },
+      "datasource": { "type": "prometheus", "uid": "towlion-prometheus" },
       "targets": [
         {
           "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
@@ -523,7 +525,7 @@ else
       "title": "Memory Usage",
       "type": "stat",
       "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
-      "datasource": { "type": "prometheus", "uid": "" },
+      "datasource": { "type": "prometheus", "uid": "towlion-prometheus" },
       "targets": [
         {
           "expr": "100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)",
@@ -547,7 +549,7 @@ else
       "title": "Disk Usage",
       "type": "stat",
       "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
-      "datasource": { "type": "prometheus", "uid": "" },
+      "datasource": { "type": "prometheus", "uid": "towlion-prometheus" },
       "targets": [
         {
           "expr": "100 - (node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"} * 100)",
@@ -571,7 +573,7 @@ else
       "title": "Uptime",
       "type": "stat",
       "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
-      "datasource": { "type": "prometheus", "uid": "" },
+      "datasource": { "type": "prometheus", "uid": "towlion-prometheus" },
       "targets": [
         {
           "expr": "node_time_seconds - node_boot_time_seconds",
@@ -588,7 +590,7 @@ else
       "title": "CPU Over Time",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
-      "datasource": { "type": "prometheus", "uid": "" },
+      "datasource": { "type": "prometheus", "uid": "towlion-prometheus" },
       "targets": [
         {
           "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
@@ -608,7 +610,7 @@ else
       "title": "Memory Over Time",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
-      "datasource": { "type": "prometheus", "uid": "" },
+      "datasource": { "type": "prometheus", "uid": "towlion-prometheus" },
       "targets": [
         {
           "expr": "node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes",
@@ -632,7 +634,7 @@ else
       "title": "Disk I/O",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
-      "datasource": { "type": "prometheus", "uid": "" },
+      "datasource": { "type": "prometheus", "uid": "towlion-prometheus" },
       "targets": [
         {
           "expr": "rate(node_disk_read_bytes_total[5m])",
@@ -656,7 +658,7 @@ else
       "title": "Network I/O",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
-      "datasource": { "type": "prometheus", "uid": "" },
+      "datasource": { "type": "prometheus", "uid": "towlion-prometheus" },
       "targets": [
         {
           "expr": "rate(node_network_receive_bytes_total{device!=\"lo\"}[5m])",
@@ -680,7 +682,7 @@ else
       "title": "Container Overview",
       "type": "table",
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 20 },
-      "datasource": { "type": "prometheus", "uid": "" },
+      "datasource": { "type": "prometheus", "uid": "towlion-prometheus" },
       "targets": [
         {
           "expr": "rate(container_cpu_usage_seconds_total{name!=\"\"}[5m]) * 100",
@@ -729,7 +731,7 @@ else
       "title": "CPU per Container",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 },
-      "datasource": { "type": "prometheus", "uid": "" },
+      "datasource": { "type": "prometheus", "uid": "towlion-prometheus" },
       "targets": [
         {
           "expr": "rate(container_cpu_usage_seconds_total{name=~\"$container\"}[5m]) * 100",
@@ -748,7 +750,7 @@ else
       "title": "Memory per Container",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 },
-      "datasource": { "type": "prometheus", "uid": "" },
+      "datasource": { "type": "prometheus", "uid": "towlion-prometheus" },
       "targets": [
         {
           "expr": "container_memory_usage_bytes{name=~\"$container\"}",
@@ -771,7 +773,7 @@ else
       {
         "name": "container",
         "type": "query",
-        "datasource": { "type": "prometheus", "uid": "" },
+        "datasource": { "type": "prometheus", "uid": "towlion-prometheus" },
         "query": "label_values(container_cpu_usage_seconds_total{name!=\"\"}, name)",
         "refresh": 2,
         "multi": true,
