@@ -95,6 +95,7 @@ fi
 echo "[$TIMESTAMP] Checking HTTP endpoints..."
 for conf in /opt/platform/caddy-apps/*.caddy; do
     [ -f "$conf" ] || continue
+    [[ "$(basename "$conf")" == "ops.caddy" ]] && continue
     domain=$(awk 'NF {print $1; exit}' "$conf")
     [ -z "$domain" ] && continue
     [[ "$domain" == "localhost" ]] && continue
