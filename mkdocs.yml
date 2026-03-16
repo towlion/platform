@@ -23,6 +23,9 @@ theme:
     text: IBM Plex Sans
     code: JetBrains Mono
 
+extra:
+  homepage: https://towlion.github.io/
+
 extra_css:
   - stylesheets/custom.css
 
