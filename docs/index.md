@@ -61,7 +61,7 @@ The goal is to make it easy to:
 
 ## Project Status
 
-Early development. The platform is evolving toward a fully automated GitHub-driven deployment ecosystem.
+Phases 1–6 complete. The platform provides a fully automated GitHub-driven deployment ecosystem with infrastructure bootstrap, multi-app hosting, observability, and self-hosting support.
 
 ## License
 

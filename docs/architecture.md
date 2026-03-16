@@ -150,12 +150,15 @@ All persistent data is stored under `/data` on the host, ensuring data survives 
 
 ```
 /data
- ├── database    # PostgreSQL data
- ├── minio       # Object storage
- ├── uploads     # File uploads
- ├── logs        # Application logs
- ├── backups     # Database backups
- └── secrets     # Runtime secrets
+ ├── postgres          # PostgreSQL data
+ ├── redis             # Redis data
+ ├── minio             # Object storage
+ ├── caddy/            # Caddy TLS certs and config
+ │   ├── data
+ │   └── config
+ ├── loki              # Log aggregation data
+ ├── grafana           # Dashboard data
+ └── backups/postgres  # Database backups
 ```
 
 Docker containers mount these directories as volumes.

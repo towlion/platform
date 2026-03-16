@@ -41,6 +41,7 @@ On your server, as the `deploy` user:
 mkdir -p ~/actions-runner && cd ~/actions-runner
 
 # Download the latest runner (check https://github.com/actions/runner/releases for current version)
+# NOTE: The version below (v2.321.0) is an example — replace with the current release from the link above.
 curl -o actions-runner-linux-x64.tar.gz -L \
   https://github.com/actions/runner/releases/download/v2.321.0/actions-runner-linux-x64-2.321.0.tar.gz
 
