@@ -126,6 +126,12 @@ The bootstrap script applies several security measures automatically. Self-hoste
 
 **Security headers** — The platform Caddyfile includes a `(security_headers)` snippet that sets: `Strict-Transport-Security` (HSTS, max-age=31536000, includeSubDomains), `X-Content-Type-Options nosniff`, `X-Frame-Options DENY`, `Referrer-Policy strict-origin-when-cross-origin`, `Permissions-Policy` (camera, microphone, and geolocation denied), and strips the `Server` header. All app and ops Caddy routes import this snippet.
 
+**Rate limiting** — Application-level rate limiting via `slowapi` (FastAPI middleware). Default limit: 60 requests/minute per IP. The `/health` endpoint is exempt from rate limiting since Docker healthchecks and monitoring hit it frequently.
+
+**Read-only container filesystems** — App containers, Caddy, and Promtail run with `read_only: true` in their Docker Compose configuration. Writable areas (`/tmp`, `/app/__pycache__`) are mounted as `tmpfs`. Database services (PostgreSQL, Redis, MinIO) are not read-only due to PID files and temp tables.
+
+**Docker event audit logging** — A systemd service (`docker-audit.service`) runs `docker events` with JSON output to `/var/log/docker-audit.log`. Promtail scrapes this file and forwards events to Loki (label: `job=docker-audit`). All container start, stop, die, and health_status events are captured.
+
 **Image vulnerability scanning** — Trivy is installed via the Aqua Security apt repository. Every deploy runs a non-blocking `trivy image` scan of the newly built app image (HIGH/CRITICAL severity). A weekly cron job (`scan-images.sh`, Sunday 04:00) scans all running container images.
 
 **Mandatory Access Control (AppArmor)** — Debian 12 ships with AppArmor enabled by default. Docker automatically applies the `docker-default` AppArmor profile to all containers, which restricts capabilities like writing to `/proc` and `/sys`, mounting filesystems, and accessing raw sockets. No configuration is needed — this works out of the box.

@@ -858,6 +858,138 @@ METRICSDASHEOF
   info "Resource metrics dashboard created"
 fi
 
+# --- App Dashboard ---
+
+APP_DASHBOARD="/opt/platform/grafana/dashboards/app-dashboard.json"
+if [[ -f "$APP_DASHBOARD" ]]; then
+  info "App dashboard already exists"
+else
+  SRC_APP_DASH="$(dirname "$0")/grafana-dashboards/app-dashboard.json"
+  if [[ -f "$SRC_APP_DASH" ]]; then
+    cp "$SRC_APP_DASH" "$APP_DASHBOARD"
+    chown deploy:deploy "$APP_DASHBOARD"
+    info "App dashboard created"
+  else
+    warn "app-dashboard.json not found in infrastructure/grafana-dashboards/ — skipping"
+  fi
+fi
+
+# --- Grafana Alerting Rules ---
+
+ALERTING_DIR="/opt/platform/grafana/provisioning/alerting"
+mkdir -p "$ALERTING_DIR"
+chown deploy:deploy "$ALERTING_DIR"
+
+ALERT_RULES="$ALERTING_DIR/rules.yml"
+if [[ -f "$ALERT_RULES" ]]; then
+  info "Grafana alerting rules already exist"
+else
+  cat > "$ALERT_RULES" <<'EOF'
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: towlion-alerts
+    folder: Towlion
+    interval: 5m
+    rules:
+      - uid: error-rate-spike
+        title: Error Rate Spike
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: towlion-loki
+            model:
+              expr: "sum(count_over_time({container=~\".+\"} | json | __error__=`` | status_code >= 500 [5m]))"
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [10]
+              refId: C
+        for: 0s
+        labels:
+          severity: warning
+        annotations:
+          summary: "More than 10 HTTP 5xx errors in the last 5 minutes"
+
+      - uid: container-down
+        title: Container Down
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: towlion-prometheus
+            model:
+              expr: "absent(container_last_seen{name=~\".+\"})"
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+              refId: C
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "A container is not reporting metrics (requires metrics profile)"
+
+      - uid: disk-usage-high
+        title: Disk Usage Above 85%
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: towlion-prometheus
+            model:
+              expr: "100 - (node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"} * 100)"
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [85]
+              refId: C
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Root filesystem usage is above 85%"
+EOF
+
+  chown deploy:deploy "$ALERT_RULES"
+  info "Grafana alerting rules created (3 rules)"
+fi
+
 # --- Grafana Caddy Route ---
 
 OPS_CADDY="/opt/platform/caddy-apps/ops.caddy"
@@ -960,6 +1092,9 @@ services:
   caddy:
     image: caddy:2
     restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
     env_file: .env
     dns:
       - 8.8.8.8
@@ -1014,11 +1149,15 @@ services:
   promtail:
     image: grafana/promtail:3.0.0
     restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
     command: -config.file=/etc/promtail/promtail-config.yml
     volumes:
       - ./promtail-config.yml:/etc/promtail/promtail-config.yml:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/log/docker-audit.log:/var/log/docker-audit.log:ro
     networks:
       - towlion
     deploy:
@@ -1038,6 +1177,7 @@ services:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
       GF_SERVER_ROOT_URL: https://${OPS_DOMAIN:-localhost}
+      GF_UNIFIED_ALERTING_ENABLED: "true"
     volumes:
       - /data/grafana:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
@@ -1142,6 +1282,51 @@ EOF
 
   chown deploy:deploy "$COMPOSE_FILE"
   info "docker-compose.yml created at $COMPOSE_FILE"
+fi
+
+# --- Docker Event Audit Logging ---
+
+DOCKER_AUDIT_SERVICE="/etc/systemd/system/docker-audit.service"
+if [[ -f "$DOCKER_AUDIT_SERVICE" ]]; then
+  info "Docker audit service already exists"
+else
+  cat > "$DOCKER_AUDIT_SERVICE" <<'EOF'
+[Unit]
+Description=Docker Event Audit Log
+After=docker.service
+Requires=docker.service
+
+[Service]
+ExecStart=/usr/bin/docker events --format '{"time":"{{.Time}}","action":"{{.Action}}","type":"{{.Type}}","actor":"{{.Actor.Attributes.name}}"}'
+StandardOutput=append:/var/log/docker-audit.log
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  systemctl daemon-reload
+  systemctl enable docker-audit
+  systemctl start docker-audit
+  info "Docker event audit logging enabled (/var/log/docker-audit.log)"
+fi
+
+# Add Promtail scrape config for docker audit log if not already present
+if ! grep -q "docker-audit" "$PROMTAIL_CONFIG" 2>/dev/null; then
+  cat >> "$PROMTAIL_CONFIG" <<'EOF'
+
+  - job_name: docker-audit
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: docker-audit
+          __path__: /var/log/docker-audit.log
+EOF
+
+  chown deploy:deploy "$PROMTAIL_CONFIG"
+  info "Promtail config updated with docker-audit scrape target"
 fi
 
 # --- Start Services ---

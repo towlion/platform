@@ -45,6 +45,7 @@ nav:
       - Deploy Prompt: deploy-prompt.md
       - Self-Hosted Runners: self-hosted-runners.md
   - Operations:
+      - Observability: observability.md
       - Troubleshooting: troubleshooting.md
       - Runbooks:
           - Restart App: runbooks/restart-app.md

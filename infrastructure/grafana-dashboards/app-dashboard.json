@@ -1,0 +1,143 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "title": "Request Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "loki", "uid": "towlion-loki" },
+      "targets": [
+        {
+          "expr": "sum by (method) (count_over_time({container=~\"$app.*\"} | json | __error__=`` | method!=`` [1m]))",
+          "legendFormat": "{{method}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "fillOpacity": 20 },
+          "unit": "reqps"
+        }
+      }
+    },
+    {
+      "title": "Error Rate (5xx)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "loki", "uid": "towlion-loki" },
+      "targets": [
+        {
+          "expr": "sum (count_over_time({container=~\"$app.*\"} | json | __error__=`` | status_code >= 500 [1m]))",
+          "legendFormat": "5xx errors",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 30,
+            "drawStyle": "bars"
+          },
+          "color": { "mode": "fixed", "fixedColor": "red" }
+        }
+      }
+    },
+    {
+      "title": "Response Time p95 (ms)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "datasource": { "type": "loki", "uid": "towlion-loki" },
+      "targets": [
+        {
+          "expr": "quantile_over_time(0.95, {container=~\"$app.*\"} | json | __error__=`` | unwrap duration_ms [5m]) by ()",
+          "legendFormat": "p95",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "fillOpacity": 10 },
+          "unit": "ms"
+        }
+      }
+    },
+    {
+      "title": "Container CPU Usage",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "towlion-prometheus" },
+      "targets": [
+        {
+          "expr": "rate(container_cpu_usage_seconds_total{name=~\"$app.*\"}[5m]) * 100",
+          "legendFormat": "{{name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "fillOpacity": 20 },
+          "unit": "percent"
+        }
+      }
+    },
+    {
+      "title": "Container Memory Usage",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "towlion-prometheus" },
+      "targets": [
+        {
+          "expr": "container_memory_usage_bytes{name=~\"$app.*\"}",
+          "legendFormat": "{{name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "fillOpacity": 20 },
+          "unit": "bytes"
+        }
+      }
+    },
+    {
+      "title": "Recent Logs",
+      "type": "logs",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 24 },
+      "datasource": { "type": "loki", "uid": "towlion-loki" },
+      "targets": [
+        {
+          "expr": "{container=~\"$app.*\"}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true
+      }
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["towlion", "app"],
+  "templating": {
+    "list": [
+      {
+        "name": "app",
+        "type": "query",
+        "datasource": { "type": "loki", "uid": "towlion-loki" },
+        "query": "label_values(container)",
+        "refresh": 2,
+        "multi": false,
+        "includeAll": false
+      }
+    ]
+  },
+  "time": { "from": "now-1h", "to": "now" },
+  "title": "App Dashboard",
+  "uid": "towlion-app-dashboard"
+}

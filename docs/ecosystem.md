@@ -6,15 +6,17 @@ The Towlion GitHub organization serves as a catalog of deployable applications. 
 
 ```
 towlion/
-  .github              # Organization profile and community health files
+  .github              # Organization profile, community health files, and reusable workflows
   platform             # Architecture docs and platform tools
   app-template         # Template for bootstrapping new apps
   todo-app             # Todo CRUD application
   hello-world          # Multi-app deployment test
   starter-app          # Created from app-template
+  wit                  # Work Item Tracker (Kanban board)
+  practice-timer       # Practice session timer for musicians
 ```
 
-Planned application repos include `uku-companion`, `fretboard-trainer`, `chord-transposer`, and `practice-timer`.
+Planned application repos include `uku-companion`, `fretboard-trainer`, and `chord-transposer`.
 
 ## Repository Types
 
