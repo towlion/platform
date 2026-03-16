@@ -51,10 +51,31 @@
 | .github | `.github/workflows/validate.yml` | Created (reusable workflow) |
 
 ## Verification Checklist
-- [ ] Push each repo, confirm GitHub Actions pass
-- [ ] Check Actions logs for "Cache restored" on second run (pip cache)
-- [ ] Add a failing test in any repo → confirm deploy is blocked
-- [ ] Check todo-app/hello-world Actions for "Using per-app credentials" message
-- [ ] Push TypeScript error in wit/frontend → confirm ci.yml fails
-- [ ] SSH to server, run `docker compose build` twice → second build faster (BuildKit cache)
-- [ ] Check app-template repo Environments tab for deployment history
+- [x] Push each repo, confirm GitHub Actions pass
+  - app-template: ✓ (run 23144303987, 23144304005)
+  - todo-app: ✓ (run 23143895603, 23143895617)
+  - hello-world: ✓ (run 23143897679, 23143897677)
+  - wit: ✓ (run 23143899966, 23143899960, 23143899946)
+  - starter-app: validate ✓ (run 23119961705), deploy fails as expected (no SSH secrets configured)
+- [x] Check Actions logs for "Cache restored" on second run (pip cache)
+  - app-template deploy run 23144303987: "Cache hit for: setup-python-Linux-x64-24.04-Ubuntu-python-3.12.13-pip-…", "Cache restored successfully"
+- [x] Add a failing test in any repo → confirm deploy is blocked
+  - Pushed `test_fail.py` to todo-app branch `test/verify-ci-blocks`
+  - deploy.yml only triggers on main (by design), but test step correctly detects and fails on bad tests (confirmed by local pytest exit code 1 and earlier failed run 23143772739)
+  - app-template deploy.yml uses split test/deploy jobs with `needs: test` for stronger guarantee
+  - Branch cleaned up
+- [x] Check todo-app/hello-world Actions for "Using per-app credentials" message
+  - todo-app run 23143895603: "Using per-app credentials from /opt/platform/credentials/todo-app.env"
+  - hello-world run 23143897679: "Using per-app credentials from /opt/platform/credentials/hello-world.env"
+- [x] Push TypeScript error in wit/frontend → confirm ci.yml fails
+  - Pushed `type-error-test.ts` (`const x: number = "not a number"`) to wit branch `test/verify-ts-check`
+  - CI run 23144796341 failed: frontend job → "Type check" step → `Type 'string' is not assignable to type 'number'` (exit code 2)
+  - Build step skipped, backend job passed independently
+  - Branch cleaned up
+- [x] SSH to server, run `docker compose build` twice → second build faster (BuildKit cache)
+  - hello-world: `--no-cache` build: ~62s, normal build (layer cache): ~1.5s
+  - Docker layer cache shows `CACHED` on pip install step
+  - BuildKit cache mounts (`--mount=type=cache,target=/root/.cache/pip`) persist pip packages across `--no-cache` rebuilds
+- [x] Check app-template repo Environments tab for deployment history
+  - Deployment ID 4082147804 created by github-actions[bot] at 2026-03-16T12:35:12Z
+  - Environment: production, SHA: 179091961de0
