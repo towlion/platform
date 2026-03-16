@@ -398,7 +398,7 @@ else
       "datasource": { "type": "loki", "uid": "towlion-loki" },
       "targets": [
         {
-          "expr": "{service=~\".+\"}",
+          "expr": "{container=~\".+\"}",
           "refId": "A"
         }
       ],
@@ -409,14 +409,14 @@ else
       }
     },
     {
-      "title": "Error Rate (per service, 5m)",
+      "title": "Error Rate (per container, 5m)",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 10 },
       "datasource": { "type": "loki", "uid": "towlion-loki" },
       "targets": [
         {
-          "expr": "sum by (service) (count_over_time({service=~\".+\"} |= \"ERROR\" [5m]))",
-          "legendFormat": "{{service}}",
+          "expr": "sum by (container) (count_over_time({container=~\".+\"} |= \"ERROR\" [5m]))",
+          "legendFormat": "{{container}}",
           "refId": "A"
         }
       ],
@@ -436,7 +436,7 @@ else
       "datasource": { "type": "loki", "uid": "towlion-loki" },
       "targets": [
         {
-          "expr": "{project=~\"$app\"}",
+          "expr": "{container=~\"$app\"}",
           "refId": "A"
         }
       ],
@@ -452,7 +452,7 @@ else
       "gridPos": { "h": 4, "w": 24, "x": 0, "y": 20 },
       "options": {
         "mode": "markdown",
-        "content": "## Towlion Platform Overview\n\nThis dashboard shows logs from all containers on the platform.\n\n- **Log Stream**: All container logs (filter by service label)\n- **Error Rate**: Count of ERROR lines per service over 5-minute windows\n- **Container Logs by App**: Select an app from the dropdown to filter logs\n\nAlerts are managed by `check-alerts.sh` (cron every 5 min) and create GitHub Issues when ALERT_REPO is configured."
+        "content": "## Towlion Platform Overview\n\nThis dashboard shows logs from all containers on the platform.\n\n- **Log Stream**: All container logs (filter by container label)\n- **Error Rate**: Count of ERROR lines per container over 5-minute windows\n- **Container Logs by App**: Select an app from the dropdown to filter logs\n\nAlerts are managed by `check-alerts.sh` (cron every 5 min) and create GitHub Issues when ALERT_REPO is configured."
       }
     }
   ],
@@ -464,7 +464,7 @@ else
         "name": "app",
         "type": "query",
         "datasource": { "type": "loki", "uid": "towlion-loki" },
-        "query": "label_values(project)",
+        "query": "label_values(container)",
         "refresh": 2,
         "multi": false,
         "includeAll": true,
