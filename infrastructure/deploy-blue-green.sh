@@ -125,6 +125,11 @@ if [ -f "$CREDENTIALS_FILE" ]; then
       && sed -i "s|^S3_BUCKET=.*|S3_BUCKET=${APP_NAME}-uploads|" deploy/.env \
       || echo "S3_BUCKET=${APP_NAME}-uploads" >> deploy/.env
   fi
+  if [ -n "${JWT_SECRET:-}" ]; then
+    grep -q "^JWT_SECRET=" deploy/.env \
+      && sed -i "s|^JWT_SECRET=.*|JWT_SECRET=${JWT_SECRET}|" deploy/.env \
+      || echo "JWT_SECRET=${JWT_SECRET}" >> deploy/.env
+  fi
   info "deploy/.env updated with per-app credentials"
 else
   warn "Per-app credentials not found at $CREDENTIALS_FILE"

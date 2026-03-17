@@ -31,7 +31,8 @@ usage() {
   echo "  --type       Type of credentials to rotate (default: all)"
   echo "               db  — PostgreSQL password only"
   echo "               s3  — MinIO password only"
-  echo "               all — Both PostgreSQL and MinIO"
+  echo "               jwt — JWT secret only"
+  echo "               all — PostgreSQL, MinIO, and JWT"
   echo ""
   echo "Examples:"
   echo "  $0 todo-app"
@@ -55,8 +56,8 @@ while [ $# -gt 0 ]; do
     --type)
       shift
       ROTATE_TYPE="${1:-all}"
-      if [[ ! "$ROTATE_TYPE" =~ ^(db|s3|all)$ ]]; then
-        error "Invalid type: $ROTATE_TYPE (must be db, s3, or all)"
+      if [[ ! "$ROTATE_TYPE" =~ ^(db|s3|jwt|all)$ ]]; then
+        error "Invalid type: $ROTATE_TYPE (must be db, s3, jwt, or all)"
         usage
       fi
       ;;
@@ -172,6 +173,29 @@ if [[ "$ROTATE_TYPE" == "s3" || "$ROTATE_TYPE" == "all" ]]; then
   fi
 
   S3_SECRET_KEY="$NEW_S3_PASSWORD"
+fi
+
+# Rotate JWT secret
+if [[ "$ROTATE_TYPE" == "jwt" || "$ROTATE_TYPE" == "all" ]]; then
+  info "--- Rotating JWT secret ---"
+
+  NEW_JWT_SECRET=$(openssl rand -base64 32)
+
+  # Update credentials file
+  grep -q '^JWT_SECRET=' "$CREDENTIALS_FILE" \
+    && sed -i "s|^JWT_SECRET=.*|JWT_SECRET=${NEW_JWT_SECRET}|" "$CREDENTIALS_FILE" \
+    || echo "JWT_SECRET=${NEW_JWT_SECRET}" >> "$CREDENTIALS_FILE"
+  info "Credentials file updated: $CREDENTIALS_FILE"
+
+  # Update app deploy/.env
+  if [ -f "$APP_ENV_FILE" ]; then
+    grep -q '^JWT_SECRET=' "$APP_ENV_FILE" \
+      && sed -i "s|^JWT_SECRET=.*|JWT_SECRET=${NEW_JWT_SECRET}|" "$APP_ENV_FILE" \
+      || echo "JWT_SECRET=${NEW_JWT_SECRET}" >> "$APP_ENV_FILE"
+    info "App .env updated: $APP_ENV_FILE"
+  else
+    warn "App .env not found at $APP_ENV_FILE — manual update needed"
+  fi
 fi
 
 # Restart the app container to pick up new credentials

@@ -92,6 +92,14 @@ class TestTier2Content:
         assert has_result(v, Result.PASS, "fastapi")
         assert has_result(v, Result.PASS, "uvicorn")
 
+    def test_valid_app_env_has_jwt_secret(self):
+        v = run_validator(VALID_APP, tier=2)
+        assert has_result(v, Result.PASS, "JWT_SECRET")
+
+    def test_missing_jwt_secret_warns(self):
+        v = run_validator(INVALID_APP, tier=2)
+        assert has_result(v, Result.WARN, "JWT_SECRET")
+
 
 class TestStrictMode:
     def test_strict_mode_treats_warnings_as_errors(self):

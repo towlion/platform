@@ -177,6 +177,11 @@ class Validator:
             else:
                 self._record(Result.FAIL, f"env.template contains {var}", "not found")
 
+        if "JWT_SECRET" in content:
+            self._record(Result.PASS, "env.template contains JWT_SECRET")
+        else:
+            self._record(Result.WARN, "env.template contains JWT_SECRET", "not found (needed if using authentication)")
+
     def _check_caddyfile(self):
         content = self._read("deploy", "Caddyfile")
         if content is None:
@@ -238,6 +243,11 @@ class Validator:
             self._record(Result.PASS, f"{deps_file} contains alembic")
         else:
             self._record(Result.WARN, f"{deps_file} contains alembic", "not found (only needed if using database migrations)")
+
+        if "pyjwt" in content_lower or "python-jose" in content_lower:
+            self._record(Result.PASS, f"{deps_file} contains JWT library")
+        else:
+            self._record(Result.WARN, f"{deps_file} contains JWT library", "not found (needed if using authentication)")
 
     def _check_secrets(self):
         secret_patterns = [

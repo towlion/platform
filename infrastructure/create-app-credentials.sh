@@ -45,6 +45,7 @@ info "Database: $APP_DB, User: $APP_USER"
 # Generate passwords
 DB_PASSWORD=$(openssl rand -base64 24)
 S3_PASSWORD=$(openssl rand -base64 24)
+JWT_SECRET=$(openssl rand -base64 32)
 
 # PostgreSQL user creation (idempotent)
 info "Checking PostgreSQL user..."
@@ -127,6 +128,7 @@ DB_USER=${APP_USER}
 DB_PASSWORD=${DB_PASSWORD}
 S3_ACCESS_KEY=${MINIO_USER}
 S3_SECRET_KEY=${S3_PASSWORD}
+JWT_SECRET=${JWT_SECRET}
 EOF
 
 # Set permissions
@@ -143,6 +145,7 @@ info "PostgreSQL User:  ${APP_USER}"
 info "PostgreSQL DB:    ${APP_DB}"
 info "MinIO User:       ${MINIO_USER}"
 info "MinIO Bucket:     ${APP_NAME}-uploads"
+info "JWT Secret:       (generated)"
 info "Credentials File: ${CREDENTIALS_FILE}"
 echo ""
 info "✓ All credentials provisioned successfully"

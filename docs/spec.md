@@ -85,6 +85,8 @@ Applications must support configuration via environment variables.
 | `S3_BUCKET` | Storage bucket name |
 | `S3_ACCESS_KEY` | Storage access key |
 | `S3_SECRET_KEY` | Storage secret key |
+| `JWT_SECRET` | Secret key for JWT token signing |
+| `CORS_ORIGINS` | Comma-separated allowed CORS origins |
 | `EMAIL_API_KEY` | Transactional email API key |
 | `EMAIL_FROM` | Sender email address |
 
@@ -177,6 +179,16 @@ Applications should follow basic security practices:
 - Validate input data
 - Enforce authentication where required
 
+## Authentication
+
+Applications that require user authentication should use:
+
+- **JWT tokens** (HS256) for session management
+- **bcrypt** for password hashing
+- **HTTPBearer** scheme for token transport
+
+The app-template provides this infrastructure out of the box. See the [app-template README](https://github.com/towlion/app-template#authentication) for usage.
+
 ## Compatibility Checklist
 
 To remain compatible with the Towlion platform, applications must:
@@ -195,6 +207,7 @@ To remain compatible with the Towlion platform, applications must:
 - [ ] `app/main.py` uses FastAPI
 - [ ] Python dependencies (`requirements.txt` or `pyproject.toml`) include `fastapi` and `uvicorn`
 - [ ] No hardcoded secrets in source code
+- [ ] `deploy/env.template` contains `JWT_SECRET` (if using authentication)
 
 **Runtime:**
 - [ ] Expose HTTP service on port 8000
