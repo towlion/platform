@@ -130,6 +130,11 @@ class Validator:
         self._check_alembic_config()
         self._check_resource_limits()
         self._check_read_only_fs()
+        self._check_init_py()
+        self._check_dockerignore()
+        self._check_middleware()
+        self._check_migration_structure()
+        self._check_health_endpoint_code()
 
     def _check_compose(self):
         content = self._read("deploy", "docker-compose.yml")
@@ -383,6 +388,85 @@ class Validator:
             self._record(Result.PASS, "Read-only filesystem enabled")
         else:
             self._record(Result.WARN, "Read-only filesystem enabled", "read_only: true not found")
+
+    def _check_init_py(self):
+        if self._exists("app", "__init__.py"):
+            self._record(Result.PASS, "app/__init__.py exists")
+        else:
+            self._record(Result.WARN, "app/__init__.py exists", "missing — app/ may not be importable as a package")
+
+    def _check_dockerignore(self):
+        content = self._read(".dockerignore")
+        if content is None:
+            self._record(Result.WARN, ".dockerignore exists", "missing — builds may include unnecessary files")
+            return
+
+        self._record(Result.PASS, ".dockerignore exists")
+
+        if ".git" in content:
+            self._record(Result.PASS, ".dockerignore excludes .git")
+        else:
+            self._record(Result.WARN, ".dockerignore excludes .git", ".git not excluded")
+
+        if ".env" in content:
+            self._record(Result.PASS, ".dockerignore excludes .env")
+        else:
+            self._record(Result.WARN, ".dockerignore excludes .env", ".env not excluded — secrets may leak into image")
+
+    def _check_middleware(self):
+        content = self._read("app", "main.py")
+        if content is None:
+            self._record(Result.SKIP, "Middleware checks", "app/main.py missing")
+            return
+
+        if re.search(r"CORS|CORSMiddleware|cors", content):
+            self._record(Result.PASS, "CORS middleware referenced")
+        else:
+            self._record(Result.WARN, "CORS middleware referenced", "no CORS reference found in app/main.py")
+
+        if re.search(r"slowapi|Limiter|RateLimiter|rate.limit", content, re.IGNORECASE):
+            self._record(Result.PASS, "Rate limiting referenced")
+        else:
+            self._record(Result.WARN, "Rate limiting referenced", "no rate limiting reference found in app/main.py")
+
+    def _check_migration_structure(self):
+        deps_content = self._read("requirements.txt") or self._read("pyproject.toml") or ""
+        if "alembic" not in deps_content.lower():
+            self._record(Result.SKIP, "Migration structure", "alembic not in dependencies")
+            return
+
+        versions_dir = self._path("app", "alembic", "versions")
+        if not os.path.isdir(versions_dir):
+            self._record(Result.WARN, "Migration versions directory", "app/alembic/versions/ not found")
+            return
+
+        py_files = [f for f in os.listdir(versions_dir) if f.endswith(".py") and f != "__init__.py"]
+        if py_files:
+            self._record(Result.PASS, "Migration versions present")
+        else:
+            self._record(Result.WARN, "Migration versions present", "app/alembic/versions/ is empty")
+
+    def _check_health_endpoint_code(self):
+        found = False
+        # Check app/main.py
+        content = self._read("app", "main.py")
+        if content and re.search(r'["\'/]health', content):
+            found = True
+
+        # Check app/routers/*.py
+        routers_dir = self._path("app", "routers")
+        if os.path.isdir(routers_dir):
+            for fname in os.listdir(routers_dir):
+                if fname.endswith(".py"):
+                    router_content = self._read("app", "routers", fname)
+                    if router_content and re.search(r'["\'/]health', router_content):
+                        found = True
+                        break
+
+        if found:
+            self._record(Result.PASS, "Health endpoint in code")
+        else:
+            self._record(Result.WARN, "Health endpoint in code", "no /health route found in app/main.py or app/routers/")
 
     # ── Tier 3: Runtime ────────────────────────────────────────────────
 

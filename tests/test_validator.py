@@ -204,6 +204,113 @@ class TestTier2AlembicConfig:
         assert has_result(v, Result.SKIP, "Alembic config")
 
 
+class TestTier2InitPy:
+    def test_init_py_present_passes(self):
+        v = run_validator(VALID_APP, tier=2)
+        assert has_result(v, Result.PASS, "app/__init__.py exists")
+
+    def test_init_py_missing_warns(self, tmp_path):
+        (tmp_path / "app").mkdir()
+        v = Validator(app_dir=str(tmp_path), tier=2, strict=False)
+        v._check_init_py()
+        assert has_result(v, Result.WARN, "app/__init__.py exists")
+
+
+class TestTier2Dockerignore:
+    def test_dockerignore_all_present_passes(self):
+        v = run_validator(VALID_APP, tier=2)
+        assert has_result(v, Result.PASS, ".dockerignore exists")
+        assert has_result(v, Result.PASS, ".dockerignore excludes .git")
+        assert has_result(v, Result.PASS, ".dockerignore excludes .env")
+
+    def test_dockerignore_missing_warns(self, tmp_path):
+        v = Validator(app_dir=str(tmp_path), tier=2, strict=False)
+        v._check_dockerignore()
+        assert has_result(v, Result.WARN, ".dockerignore exists")
+
+    def test_dockerignore_missing_git_warns(self, tmp_path):
+        (tmp_path / ".dockerignore").write_text(".env\n")
+        v = Validator(app_dir=str(tmp_path), tier=2, strict=False)
+        v._check_dockerignore()
+        assert has_result(v, Result.WARN, ".dockerignore excludes .git")
+
+    def test_dockerignore_missing_env_warns(self, tmp_path):
+        (tmp_path / ".dockerignore").write_text(".git\n")
+        v = Validator(app_dir=str(tmp_path), tier=2, strict=False)
+        v._check_dockerignore()
+        assert has_result(v, Result.WARN, ".dockerignore excludes .env")
+
+
+class TestTier2Middleware:
+    def test_both_middleware_passes(self):
+        v = run_validator(VALID_APP, tier=2)
+        assert has_result(v, Result.PASS, "CORS middleware referenced")
+        assert has_result(v, Result.PASS, "Rate limiting referenced")
+
+    def test_missing_cors_warns(self, tmp_path):
+        (tmp_path / "app").mkdir()
+        (tmp_path / "app" / "main.py").write_text("from fastapi import FastAPI\nfrom slowapi import Limiter\napp = FastAPI()\n")
+        v = Validator(app_dir=str(tmp_path), tier=2, strict=False)
+        v._check_middleware()
+        assert has_result(v, Result.WARN, "CORS middleware referenced")
+
+    def test_missing_rate_limiting_warns(self, tmp_path):
+        (tmp_path / "app").mkdir()
+        (tmp_path / "app" / "main.py").write_text("from fastapi import FastAPI\nfrom fastapi.middleware.cors import CORSMiddleware\napp = FastAPI()\n")
+        v = Validator(app_dir=str(tmp_path), tier=2, strict=False)
+        v._check_middleware()
+        assert has_result(v, Result.WARN, "Rate limiting referenced")
+
+
+class TestTier2MigrationStructure:
+    def test_migration_structure_passes(self):
+        v = run_validator(VALID_APP, tier=2)
+        assert has_result(v, Result.PASS, "Migration versions present")
+
+    def test_no_alembic_dep_skips(self, tmp_path):
+        (tmp_path / "requirements.txt").write_text("fastapi\nuvicorn\n")
+        v = Validator(app_dir=str(tmp_path), tier=2, strict=False)
+        v._check_migration_structure()
+        assert has_result(v, Result.SKIP, "Migration structure")
+
+    def test_missing_versions_dir_warns(self, tmp_path):
+        (tmp_path / "requirements.txt").write_text("fastapi\nalembic\n")
+        (tmp_path / "app").mkdir()
+        (tmp_path / "app" / "alembic").mkdir()
+        v = Validator(app_dir=str(tmp_path), tier=2, strict=False)
+        v._check_migration_structure()
+        assert has_result(v, Result.WARN, "Migration versions directory")
+
+    def test_empty_versions_dir_warns(self, tmp_path):
+        (tmp_path / "requirements.txt").write_text("fastapi\nalembic\n")
+        (tmp_path / "app" / "alembic" / "versions").mkdir(parents=True)
+        v = Validator(app_dir=str(tmp_path), tier=2, strict=False)
+        v._check_migration_structure()
+        assert has_result(v, Result.WARN, "Migration versions present")
+
+
+class TestTier2HealthEndpointCode:
+    def test_health_in_main_passes(self):
+        v = run_validator(VALID_APP, tier=2)
+        assert has_result(v, Result.PASS, "Health endpoint in code")
+
+    def test_no_health_endpoint_warns(self, tmp_path):
+        (tmp_path / "app").mkdir()
+        (tmp_path / "app" / "main.py").write_text("from fastapi import FastAPI\napp = FastAPI()\n")
+        v = Validator(app_dir=str(tmp_path), tier=2, strict=False)
+        v._check_health_endpoint_code()
+        assert has_result(v, Result.WARN, "Health endpoint in code")
+
+    def test_health_in_router_passes(self, tmp_path):
+        (tmp_path / "app").mkdir()
+        (tmp_path / "app" / "main.py").write_text("from fastapi import FastAPI\napp = FastAPI()\n")
+        (tmp_path / "app" / "routers").mkdir()
+        (tmp_path / "app" / "routers" / "health.py").write_text('@router.get("/health")\ndef health(): return {"status":"ok"}\n')
+        v = Validator(app_dir=str(tmp_path), tier=2, strict=False)
+        v._check_health_endpoint_code()
+        assert has_result(v, Result.PASS, "Health endpoint in code")
+
+
 class TestTier3WithMocking:
     """Tier 3 tests using mocked subprocess.run — no Docker required."""
 
