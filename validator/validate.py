@@ -125,6 +125,11 @@ class Validator:
         self._check_main_py()
         self._check_dependencies()
         self._check_secrets()
+        self._check_dockerfile_security()
+        self._check_standalone_compose()
+        self._check_alembic_config()
+        self._check_resource_limits()
+        self._check_read_only_fs()
 
     def _check_compose(self):
         content = self._read("deploy", "docker-compose.yml")
@@ -295,6 +300,90 @@ class Validator:
         else:
             self._record(Result.PASS, "No hardcoded secrets detected")
 
+    def _check_dockerfile_security(self):
+        content = self._read("app", "Dockerfile")
+        if content is None:
+            self._record(Result.SKIP, "Dockerfile security", "app/Dockerfile missing")
+            return
+
+        if re.search(r"^\s*USER\s+", content, re.MULTILINE):
+            self._record(Result.PASS, "Dockerfile sets USER")
+        else:
+            self._record(Result.WARN, "Dockerfile sets USER", "container runs as root")
+
+        if re.search(r"^\s*ADD\s+https?://", content, re.MULTILINE):
+            self._record(Result.WARN, "Dockerfile ADD from URL", "use COPY instead of ADD for remote files")
+        else:
+            self._record(Result.PASS, "Dockerfile no ADD from URL")
+
+        env_secret = re.search(
+            r"^\s*ENV\s+\S*(PASSWORD|SECRET|API_KEY|TOKEN)\s*=\s*\S+",
+            content,
+            re.MULTILINE | re.IGNORECASE,
+        )
+        if env_secret:
+            self._record(Result.WARN, "Dockerfile ENV secrets", "ENV contains sensitive value")
+        else:
+            self._record(Result.PASS, "Dockerfile no ENV secrets")
+
+    def _check_standalone_compose(self):
+        content = self._read("deploy", "docker-compose.standalone.yml")
+        if content is None:
+            self._record(Result.SKIP, "Standalone compose", "file missing")
+            return
+
+        if "services:" not in content:
+            self._record(Result.FAIL, "Standalone compose has services", "no services: key found")
+        else:
+            self._record(Result.PASS, "Standalone compose has services")
+
+        if "8000" in content:
+            self._record(Result.PASS, "Standalone compose references port 8000")
+        else:
+            self._record(Result.WARN, "Standalone compose references port 8000", "not found")
+
+    def _check_alembic_config(self):
+        deps_content = self._read("requirements.txt") or self._read("pyproject.toml") or ""
+        if "alembic" not in deps_content.lower():
+            self._record(Result.SKIP, "Alembic config", "alembic not in dependencies")
+            return
+
+        has_ini = self._exists("alembic.ini")
+        has_dir = os.path.isdir(self._path("app", "alembic"))
+        if has_ini or has_dir:
+            self._record(Result.PASS, "Alembic config present")
+        else:
+            self._record(Result.WARN, "Alembic config present", "alembic dep found but no alembic.ini or app/alembic/")
+
+    def _check_resource_limits(self):
+        content = self._read("deploy", "docker-compose.yml")
+        if content is None:
+            self._record(Result.SKIP, "Resource limits", "file missing")
+            return
+
+        has_memory = "memory:" in content
+        has_cpus = "cpus:" in content
+        if has_memory and has_cpus:
+            self._record(Result.PASS, "Resource limits configured")
+        else:
+            missing = []
+            if not has_memory:
+                missing.append("memory")
+            if not has_cpus:
+                missing.append("cpus")
+            self._record(Result.WARN, "Resource limits configured", f"missing: {', '.join(missing)}")
+
+    def _check_read_only_fs(self):
+        content = self._read("deploy", "docker-compose.yml")
+        if content is None:
+            self._record(Result.SKIP, "Read-only filesystem", "file missing")
+            return
+
+        if re.search(r"read_only:\s*true", content):
+            self._record(Result.PASS, "Read-only filesystem enabled")
+        else:
+            self._record(Result.WARN, "Read-only filesystem enabled", "read_only: true not found")
+
     # ── Tier 3: Runtime ────────────────────────────────────────────────
 
     def check_runtime(self):
@@ -313,6 +402,8 @@ class Validator:
 
         self._check_compose_config()
         self._check_container_build()
+        self._check_frontend_build()
+        self._check_standalone_compose_config()
         self._check_health_endpoint()
 
     def _check_compose_config(self):
@@ -348,6 +439,40 @@ class Validator:
             self._record(Result.PASS, "Container builds successfully")
         else:
             self._record(Result.FAIL, "Container builds successfully", result.stderr.strip()[:200])
+
+    def _check_frontend_build(self):
+        dockerfile = self._path("frontend", "Dockerfile")
+        if not os.path.exists(dockerfile):
+            self._record(Result.SKIP, "Frontend build", "frontend/Dockerfile missing")
+            return
+
+        result = subprocess.run(
+            ["docker", "build", "-f", dockerfile, "-t", "towlion-validate-frontend", self._path("frontend")],
+            capture_output=True,
+            text=True,
+            timeout=300,
+        )
+        if result.returncode == 0:
+            self._record(Result.PASS, "Frontend builds successfully")
+        else:
+            self._record(Result.FAIL, "Frontend builds successfully", result.stderr.strip()[:200])
+
+    def _check_standalone_compose_config(self):
+        compose_path = self._path("deploy", "docker-compose.standalone.yml")
+        if not os.path.exists(compose_path):
+            self._record(Result.SKIP, "Standalone compose config", "file missing")
+            return
+
+        result = subprocess.run(
+            ["docker", "compose", "-f", compose_path, "config"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if result.returncode == 0:
+            self._record(Result.PASS, "Standalone compose config validates")
+        else:
+            self._record(Result.FAIL, "Standalone compose config validates", result.stderr.strip()[:200])
 
     def _check_health_endpoint(self):
         import json
