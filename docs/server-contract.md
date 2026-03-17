@@ -52,7 +52,7 @@ This document defines the contract between the platform infrastructure (bootstra
   loki/                                 # Loki log storage
   grafana/                              # Grafana state
   prometheus/                           # Prometheus data (created always, used when metrics enabled)
-  backups/postgres/                     # pg_dump backup files (7-day retention)
+  backups/postgres/                     # pg_dump backup files (7-day retention, optional .dump.enc encryption)
 ```
 
 ## Bootstrap to Deploy Lifecycle
@@ -104,15 +104,15 @@ All scripts live in the platform repo under `infrastructure/` and are copied to 
 | `bootstrap-server.sh` | Transform fresh Debian into running platform | Manual (`sudo bash`) |
 | `verify-server.sh` | Read-only health check of server state | Manual (`bash`) |
 | `create-app-credentials.sh` | Provision per-app PostgreSQL user + MinIO bucket | Manual (`bash <script> <app-name>`) |
-| `backup-postgres.sh` | Per-database `pg_dump` with 7-day retention | Cron: daily at 02:00 |
+| `backup-postgres.sh` | Per-database `pg_dump` with 7-day retention, optional AES-256 encryption | Cron: daily at 02:00 |
 | `restore-postgres.sh` | Restore a database from backup | Manual (`bash <script>`) |
 | `check-alerts.sh` | Check container health, disk, memory; create GitHub Issues | Cron: every 5 minutes |
 | `update-images.sh` | Pull latest Docker images and recreate containers | Cron: weekly Sunday at 03:00 |
 | `usage-report.sh` | Generate 6-section resource usage report | Manual (`bash`) |
-| `scan-images.sh` | Scan running container images for vulnerabilities (Trivy) | Cron: weekly Sunday at 04:00 |
+| `scan-images.sh` | Scan running container images for vulnerabilities (Trivy), create GitHub Issues | Cron: weekly Sunday at 04:00 |
 | `deploy-blue-green.sh` | Zero-downtime blue-green deploy with automatic rollback | Called by `deploy.yml` workflow |
 | `verify-backup.sh` | Restore backups to temp DB and verify integrity | Cron: weekly Sunday at 05:00 |
-| `rotate-credentials.sh` | Rotate PostgreSQL/MinIO credentials without downtime | Manual (`bash <script> <app-name>`) |
+| `rotate-credentials.sh` | Rotate per-app or platform master credentials without downtime | Manual (`bash <script> <app-name>` or `--platform`) |
 
 ## Server Hardening
 
@@ -139,6 +139,14 @@ The bootstrap script applies several security measures automatically. Self-hoste
 **Read-only container filesystems** — App containers, Caddy, and Promtail run with `read_only: true` in their Docker Compose configuration. Writable areas (`/tmp`, `/app/__pycache__`) are mounted as `tmpfs`. Database services (PostgreSQL, Redis, MinIO) are not read-only due to PID files and temp tables.
 
 **Docker event audit logging** — A systemd service (`docker-audit.service`) runs `docker events` with JSON output to `/var/log/docker-audit.log`. Promtail scrapes this file and forwards events to Loki (label: `job=docker-audit`). All container start, stop, die, and health_status events are captured.
+
+**Backup encryption** — Backups can be encrypted at rest using AES-256-CBC. Set the `BACKUP_ENCRYPTION_KEY` environment variable to the path of a key file. When set, `backup-postgres.sh` pipes `pg_dump` output through `openssl enc` and produces `.dump.enc` files. `restore-postgres.sh` and `verify-backup.sh` automatically detect encrypted backups and decrypt them before restoring. If the key file is not set, backups are stored unencrypted (with a warning).
+
+**Log rotation** — A logrotate config at `/etc/logrotate.d/towlion` rotates `/var/log/towlion-*.log` and `/var/log/docker-audit.log` daily, retaining 90 compressed copies. The `docker-audit.service` is restarted after rotation since it holds the log file open.
+
+**Log retention** — Loki retains logs for 90 days (`retention_period: 2160h`). The compactor runs retention enforcement with a 2-hour delete delay.
+
+**Platform credential rotation** — `rotate-credentials.sh --platform` rotates the PostgreSQL superuser password and/or MinIO root password. After rotation, all app health checks are verified. Use `--yes` to skip the confirmation prompt.
 
 **Image vulnerability scanning** — Trivy is installed via the Aqua Security apt repository. Every deploy runs a non-blocking `trivy image` scan of the newly built app image (HIGH/CRITICAL severity). A weekly cron job (`scan-images.sh`, Sunday 04:00) scans all running container images.
 

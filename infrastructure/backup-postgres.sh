@@ -23,12 +23,25 @@ error() {
 # Configuration
 BACKUP_DIR="/data/backups/postgres"
 COMPOSE_FILE="/opt/platform/docker-compose.yml"
+# BACKUP_ENCRYPTION_KEY: path to a key file for AES-256-CBC encryption (optional)
+ENCRYPTION_KEY="${BACKUP_ENCRYPTION_KEY:-}"
 
 # Create backup directory if it doesn't exist
 mkdir -p "$BACKUP_DIR"
 
 info "Starting PostgreSQL backup..."
 info "Backup directory: $BACKUP_DIR"
+
+if [ -n "$ENCRYPTION_KEY" ] && [ -f "$ENCRYPTION_KEY" ]; then
+    info "Encryption enabled (key file: $ENCRYPTION_KEY)"
+    ENCRYPT=true
+elif [ -n "$ENCRYPTION_KEY" ]; then
+    warn "BACKUP_ENCRYPTION_KEY is set but file not found: $ENCRYPTION_KEY"
+    warn "Backups will NOT be encrypted"
+    ENCRYPT=false
+else
+    ENCRYPT=false
+fi
 
 # List all databases except templates and postgres system database
 info "Fetching database list..."
@@ -48,12 +61,30 @@ backup_count=0
 
 # Backup each database
 for db in $databases; do
-    filename="${db}_$(date +%Y%m%d_%H%M%S).dump"
+    timestamp=$(date +%Y%m%d_%H%M%S)
+    if [ "$ENCRYPT" = true ]; then
+        filename="${db}_${timestamp}.dump.enc"
+    else
+        filename="${db}_${timestamp}.dump"
+    fi
     filepath="$BACKUP_DIR/$filename"
 
     info "Backing up database: $db"
 
-    if docker compose -f "$COMPOSE_FILE" exec -T postgres pg_dump -U postgres -Fc "$db" > "$filepath"; then
+    if [ "$ENCRYPT" = true ]; then
+        dump_ok=false
+        if docker compose -f "$COMPOSE_FILE" exec -T postgres pg_dump -U postgres -Fc "$db" \
+            | openssl enc -aes-256-cbc -pbkdf2 -pass "file:${ENCRYPTION_KEY}" -out "$filepath"; then
+            dump_ok=true
+        fi
+    else
+        dump_ok=false
+        if docker compose -f "$COMPOSE_FILE" exec -T postgres pg_dump -U postgres -Fc "$db" > "$filepath"; then
+            dump_ok=true
+        fi
+    fi
+
+    if [ "$dump_ok" = true ]; then
         file_size=$(stat -f%z "$filepath" 2>/dev/null || stat -c%s "$filepath" 2>/dev/null || echo "0")
         human_size=$(numfmt --to=iec-i --suffix=B "$file_size" 2>/dev/null || echo "${file_size}B")
         info "  ✓ Backed up $db to $filename ($human_size)"
@@ -68,7 +99,7 @@ done
 
 # Retention: delete backups older than 7 days
 info "Cleaning up old backups (older than 7 days)..."
-deleted_count=$(find "$BACKUP_DIR" -name "*.dump" -mtime +7 -delete -print | wc -l | tr -d ' ')
+deleted_count=$(find "$BACKUP_DIR" \( -name "*.dump" -o -name "*.dump.enc" \) -mtime +7 -delete -print | wc -l | tr -d ' ')
 if [ "$deleted_count" -gt 0 ]; then
     info "  Removed $deleted_count old backup(s)"
 else

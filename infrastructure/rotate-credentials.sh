@@ -22,11 +22,12 @@ error() {
 
 # Usage
 usage() {
-  echo "Usage: $0 <app-name> [--type db|s3|all]"
+  echo "Usage: $0 <app-name> [--type db|s3|jwt|all]"
+  echo "       $0 --platform [--type db|s3|all] [--yes]"
   echo ""
-  echo "Rotate credentials for an application without downtime."
+  echo "Rotate credentials for an application or the platform itself."
   echo ""
-  echo "Arguments:"
+  echo "App mode:"
   echo "  app-name     Name of the application (e.g., todo-app)"
   echo "  --type       Type of credentials to rotate (default: all)"
   echo "               db  — PostgreSQL password only"
@@ -34,10 +35,17 @@ usage() {
   echo "               jwt — JWT secret only"
   echo "               all — PostgreSQL, MinIO, and JWT"
   echo ""
+  echo "Platform mode:"
+  echo "  --platform   Rotate platform master credentials"
+  echo "  --type       db  — PostgreSQL superuser password"
+  echo "               s3  — MinIO root password"
+  echo "               all — Both (default)"
+  echo "  --yes        Skip confirmation prompt"
+  echo ""
   echo "Examples:"
   echo "  $0 todo-app"
   echo "  $0 todo-app --type db"
-  echo "  $0 todo-app --type s3"
+  echo "  $0 --platform --type db --yes"
   exit 1
 }
 
@@ -47,19 +55,39 @@ if [ $# -lt 1 ]; then
   usage
 fi
 
-APP_NAME="$1"
+PLATFORM_MODE=false
+APP_NAME=""
 ROTATE_TYPE="all"
+SKIP_CONFIRM=false
 
-shift
+# Check for --platform as first arg
+if [ "$1" = "--platform" ]; then
+  PLATFORM_MODE=true
+  shift
+else
+  APP_NAME="$1"
+  shift
+fi
+
 while [ $# -gt 0 ]; do
   case "$1" in
     --type)
       shift
       ROTATE_TYPE="${1:-all}"
-      if [[ ! "$ROTATE_TYPE" =~ ^(db|s3|jwt|all)$ ]]; then
-        error "Invalid type: $ROTATE_TYPE (must be db, s3, jwt, or all)"
-        usage
+      if [ "$PLATFORM_MODE" = true ]; then
+        if [[ ! "$ROTATE_TYPE" =~ ^(db|s3|all)$ ]]; then
+          error "Invalid type for platform mode: $ROTATE_TYPE (must be db, s3, or all)"
+          usage
+        fi
+      else
+        if [[ ! "$ROTATE_TYPE" =~ ^(db|s3|jwt|all)$ ]]; then
+          error "Invalid type: $ROTATE_TYPE (must be db, s3, jwt, or all)"
+          usage
+        fi
       fi
+      ;;
+    --yes)
+      SKIP_CONFIRM=true
       ;;
     *)
       error "Unknown argument: $1"
@@ -71,18 +99,144 @@ done
 
 # Configuration
 PLATFORM_COMPOSE="/opt/platform/docker-compose.yml"
-CREDENTIALS_FILE="/opt/platform/credentials/${APP_NAME}.env"
-APP_ENV_FILE="/opt/apps/${APP_NAME}/deploy/.env"
-SLOT_FILE="/opt/apps/${APP_NAME}/.deploy-slot"
-APP_DB="$(echo "${APP_NAME}" | tr '-' '_')_db"
-APP_USER="$(echo "${APP_NAME}" | tr '-' '_')_user"
-MINIO_USER="${APP_NAME}-user"
+PLATFORM_ENV="/opt/platform/.env"
 
 # Check Docker access
 if ! docker ps >/dev/null 2>&1; then
   error "This script requires Docker access. Run as root or ensure your user is in the docker group."
   exit 1
 fi
+
+# Source platform .env
+if [ ! -f "$PLATFORM_ENV" ]; then
+  error "/opt/platform/.env not found"
+  exit 1
+fi
+# shellcheck source=/dev/null
+source "$PLATFORM_ENV"
+
+# ============================================================
+# Platform credential rotation
+# ============================================================
+if [ "$PLATFORM_MODE" = true ]; then
+  info "=== Platform Master Credential Rotation ==="
+  info "Type: ${ROTATE_TYPE}"
+  echo ""
+
+  if [ "$SKIP_CONFIRM" = false ]; then
+    warn "This will rotate platform master credentials affecting ALL services."
+    echo -n "Continue? (y/N): "
+    read -r response
+    if [[ ! "$response" =~ ^[Yy]$ ]]; then
+      info "Rotation cancelled"
+      exit 0
+    fi
+  fi
+
+  # Rotate PostgreSQL superuser password
+  if [[ "$ROTATE_TYPE" == "db" || "$ROTATE_TYPE" == "all" ]]; then
+    info "--- Rotating PostgreSQL superuser password ---"
+
+    NEW_PG_PASSWORD=$(openssl rand -base64 24)
+
+    if docker compose -f "$PLATFORM_COMPOSE" exec -T postgres \
+      psql -U postgres -c "ALTER USER postgres WITH PASSWORD '${NEW_PG_PASSWORD}'" >/dev/null 2>&1; then
+      info "PostgreSQL superuser password updated"
+    else
+      error "Failed to update PostgreSQL superuser password"
+      exit 1
+    fi
+
+    # Update platform .env
+    sed -i "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=${NEW_PG_PASSWORD}|" "$PLATFORM_ENV"
+    info "Platform .env updated"
+
+    # Restart postgres to pick up new password
+    cd /opt/platform
+    docker compose restart postgres
+    info "PostgreSQL container restarted"
+
+    # Wait for postgres to be ready
+    sleep 3
+    if docker compose -f "$PLATFORM_COMPOSE" exec -T postgres pg_isready -U postgres >/dev/null 2>&1; then
+      info "PostgreSQL is ready"
+    else
+      error "PostgreSQL failed to come back up after password rotation!"
+      exit 1
+    fi
+  fi
+
+  # Rotate MinIO root password
+  if [[ "$ROTATE_TYPE" == "s3" || "$ROTATE_TYPE" == "all" ]]; then
+    info "--- Rotating MinIO root password ---"
+
+    NEW_MINIO_PASSWORD=$(openssl rand -base64 24)
+
+    # Update platform .env
+    sed -i "s|^MINIO_ROOT_PASSWORD=.*|MINIO_ROOT_PASSWORD=${NEW_MINIO_PASSWORD}|" "$PLATFORM_ENV"
+    info "Platform .env updated"
+
+    # Restart minio with new password
+    cd /opt/platform
+    docker compose restart minio
+    info "MinIO container restarted"
+
+    # Verify MinIO health
+    sleep 3
+    if docker compose -f "$PLATFORM_COMPOSE" exec -T minio curl -sf http://localhost:9000/minio/health/live >/dev/null 2>&1; then
+      info "MinIO is healthy"
+    else
+      warn "MinIO health check inconclusive — verify manually"
+    fi
+  fi
+
+  # Health check all apps
+  info "--- Verifying all app health ---"
+  ALL_HEALTHY=true
+  if [ -d /opt/platform/credentials ]; then
+    for cred_file in /opt/platform/credentials/*.env; do
+      [ -f "$cred_file" ] || continue
+      app=$(basename "$cred_file" .env)
+      slot_file="/opt/apps/${app}/.deploy-slot"
+      slot="blue"
+      [ -f "$slot_file" ] && slot=$(cat "$slot_file")
+      container="${app}-${slot}-app-1"
+
+      health=$(docker inspect --format='{{.State.Health.Status}}' "$container" 2>/dev/null || echo "not_found")
+      if [ "$health" = "healthy" ]; then
+        info "  ${app}: healthy"
+      else
+        warn "  ${app}: ${health}"
+        ALL_HEALTHY=false
+      fi
+    done
+  fi
+
+  if [ "$ALL_HEALTHY" = true ]; then
+    info "All apps healthy after platform credential rotation"
+  else
+    warn "Some apps may need attention — check above"
+  fi
+
+  echo ""
+  info "=== Platform Credential Rotation Complete ==="
+  exit 0
+fi
+
+# ============================================================
+# Per-app credential rotation (original behavior)
+# ============================================================
+if [ -z "$APP_NAME" ]; then
+  error "App name required (or use --platform)"
+  usage
+fi
+
+CREDENTIALS_FILE="/opt/platform/credentials/${APP_NAME}.env"
+APP_ENV_FILE="/opt/apps/${APP_NAME}/deploy/.env"
+SLOT_FILE="/opt/apps/${APP_NAME}/.deploy-slot"
+APP_DB="$(echo "${APP_NAME}" | tr '-' '_')_db"
+APP_USER="$(echo "${APP_NAME}" | tr '-' '_')_user"
+MINIO_USER="${APP_NAME}-user"
 
 # Check credentials file exists
 if [ ! -f "$CREDENTIALS_FILE" ]; then
@@ -94,14 +248,6 @@ fi
 # Source existing credentials
 # shellcheck source=/dev/null
 source "$CREDENTIALS_FILE"
-
-# Source platform .env for MinIO root credentials
-if [ ! -f /opt/platform/.env ]; then
-  error "/opt/platform/.env not found"
-  exit 1
-fi
-# shellcheck source=/dev/null
-source /opt/platform/.env
 
 # Determine current deployment slot
 CURRENT_SLOT="blue"

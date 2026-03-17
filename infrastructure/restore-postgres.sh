@@ -64,9 +64,32 @@ fi
 
 # Determine target database
 if [ -z "$TARGET_DB" ]; then
-    # Extract database name from filename pattern: <dbname>_YYYYMMDD_HHMMSS.dump
-    TARGET_DB=$(basename "$BACKUP_FILE" | sed 's/_[0-9]\{8\}_[0-9]\{6\}\.dump$//')
+    # Extract database name from filename pattern: <dbname>_YYYYMMDD_HHMMSS.dump[.enc]
+    TARGET_DB=$(basename "$BACKUP_FILE" | sed 's/_[0-9]\{8\}_[0-9]\{6\}\.dump\(\.enc\)\?$//')
     info "Extracted database name from filename: $TARGET_DB"
+fi
+
+# Handle encrypted backups
+RESTORE_FILE="$BACKUP_FILE"
+DECRYPTED_TEMP=""
+if [[ "$BACKUP_FILE" == *.dump.enc ]]; then
+    ENCRYPTION_KEY="${BACKUP_ENCRYPTION_KEY:-}"
+    if [ -z "$ENCRYPTION_KEY" ] || [ ! -f "$ENCRYPTION_KEY" ]; then
+        error "Encrypted backup detected but BACKUP_ENCRYPTION_KEY is not set or file not found"
+        exit 1
+    fi
+    DECRYPTED_TEMP=$(mktemp /tmp/restore_XXXXXXXXXX.dump)
+    info "Decrypting backup..."
+    if openssl enc -d -aes-256-cbc -pbkdf2 -pass "file:${ENCRYPTION_KEY}" -in "$BACKUP_FILE" -out "$DECRYPTED_TEMP"; then
+        info "Backup decrypted to temp file"
+        RESTORE_FILE="$DECRYPTED_TEMP"
+    else
+        rm -f "$DECRYPTED_TEMP"
+        error "Failed to decrypt backup"
+        exit 1
+    fi
+    # Clean up temp file on exit
+    trap 'rm -f "$DECRYPTED_TEMP"' EXIT
 fi
 
 # Confirmation
@@ -102,7 +125,7 @@ fi
 
 # Restore backup
 info "Restoring backup to $TARGET_DB..."
-if cat "$BACKUP_FILE" | docker compose -f "$COMPOSE_FILE" exec -T postgres pg_restore -U postgres -d "$TARGET_DB" --no-owner --no-acl; then
+if cat "$RESTORE_FILE" | docker compose -f "$COMPOSE_FILE" exec -T postgres pg_restore -U postgres -d "$TARGET_DB" --no-owner --no-acl; then
     info "  ✓ Backup restored successfully"
 else
     error "Failed to restore backup"

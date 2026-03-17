@@ -314,7 +314,7 @@ common:
       store: inmemory
 
 limits_config:
-  retention_period: 336h
+  retention_period: 2160h
 
 schema_config:
   configs:
@@ -329,6 +329,8 @@ schema_config:
 compactor:
   working_directory: /loki/compactor
   retention_enabled: true
+  retention_delete_delay: 2h
+  retention_delete_worker_count: 150
   delete_request_cancel_period: 10m
   delete_request_store: filesystem
 EOF
@@ -1327,6 +1329,27 @@ EOF
 
   chown deploy:deploy "$PROMTAIL_CONFIG"
   info "Promtail config updated with docker-audit scrape target"
+fi
+
+# --- Log Rotation ---
+
+LOGROTATE_CONF="/etc/logrotate.d/towlion"
+LOGROTATE_CONTENT='/var/log/towlion-*.log /var/log/docker-audit.log {
+    daily
+    rotate 90
+    compress
+    missingok
+    notifempty
+    postrotate
+        systemctl restart docker-audit.service 2>/dev/null || true
+    endscript
+}'
+
+if [[ -f "$LOGROTATE_CONF" ]] && echo "$LOGROTATE_CONTENT" | diff -q - "$LOGROTATE_CONF" >/dev/null 2>&1; then
+  info "Logrotate config already up to date"
+else
+  echo "$LOGROTATE_CONTENT" > "$LOGROTATE_CONF"
+  info "Logrotate config created at $LOGROTATE_CONF"
 fi
 
 # --- Start Services ---

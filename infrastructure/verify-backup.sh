@@ -69,10 +69,10 @@ fi
 declare -a DATABASES=()
 
 if [ "$VERIFY_ALL" = true ]; then
-  # Find all unique database names from backup files
-  for dump in "$BACKUP_DIR"/*.dump; do
+  # Find all unique database names from backup files (plain and encrypted)
+  for dump in "$BACKUP_DIR"/*.dump "$BACKUP_DIR"/*.dump.enc; do
     [ -f "$dump" ] || continue
-    db_name=$(basename "$dump" | sed 's/_[0-9]\{8\}_[0-9]\{6\}\.dump$//')
+    db_name=$(basename "$dump" | sed 's/_[0-9]\{8\}_[0-9]\{6\}\.dump\(\.enc\)\?$//')
     # Add to array if not already present
     if [[ ! " ${DATABASES[*]:-} " =~ " ${db_name} " ]]; then
       DATABASES+=("$db_name")
@@ -100,8 +100,8 @@ FAILED=0
 for db_name in "${DATABASES[@]}"; do
   info "--- Verifying: $db_name ---"
 
-  # Find the latest backup for this database
-  LATEST_BACKUP=$(find "$BACKUP_DIR" -name "${db_name}_*.dump" -type f | sort -r | head -1)
+  # Find the latest backup for this database (plain or encrypted)
+  LATEST_BACKUP=$(find "$BACKUP_DIR" \( -name "${db_name}_*.dump" -o -name "${db_name}_*.dump.enc" \) -type f | sort -r | head -1)
 
   if [ -z "$LATEST_BACKUP" ]; then
     error "No backup found for $db_name"
@@ -112,6 +112,27 @@ for db_name in "${DATABASES[@]}"; do
   BACKUP_SIZE=$(stat -c%s "$LATEST_BACKUP" 2>/dev/null || stat -f%z "$LATEST_BACKUP" 2>/dev/null || echo "0")
   HUMAN_SIZE=$(numfmt --to=iec-i --suffix=B "$BACKUP_SIZE" 2>/dev/null || echo "${BACKUP_SIZE}B")
   info "Latest backup: $(basename "$LATEST_BACKUP") ($HUMAN_SIZE)"
+
+  # Decrypt if encrypted
+  VERIFY_FILE="$LATEST_BACKUP"
+  DECRYPTED_TEMP=""
+  if [[ "$LATEST_BACKUP" == *.dump.enc ]]; then
+    ENCRYPTION_KEY="${BACKUP_ENCRYPTION_KEY:-}"
+    if [ -z "$ENCRYPTION_KEY" ] || [ ! -f "$ENCRYPTION_KEY" ]; then
+      error "Encrypted backup but BACKUP_ENCRYPTION_KEY is not set or file not found"
+      FAILED=$((FAILED + 1))
+      continue
+    fi
+    DECRYPTED_TEMP=$(mktemp /tmp/verify_XXXXXXXXXX.dump)
+    info "Decrypting backup..."
+    if ! openssl enc -d -aes-256-cbc -pbkdf2 -pass "file:${ENCRYPTION_KEY}" -in "$LATEST_BACKUP" -out "$DECRYPTED_TEMP"; then
+      error "Failed to decrypt backup"
+      rm -f "$DECRYPTED_TEMP"
+      FAILED=$((FAILED + 1))
+      continue
+    fi
+    VERIFY_FILE="$DECRYPTED_TEMP"
+  fi
 
   # Create temporary verification database
   TIMESTAMP=$(date +%s)
@@ -129,7 +150,7 @@ for db_name in "${DATABASES[@]}"; do
   fi
 
   # Restore backup into temp database
-  if cat "$LATEST_BACKUP" | docker compose -f "$COMPOSE_FILE" exec -T postgres \
+  if cat "$VERIFY_FILE" | docker compose -f "$COMPOSE_FILE" exec -T postgres \
     pg_restore -U postgres -d "$VERIFY_DB" --no-owner --no-acl 2>/dev/null; then
     info "Restore completed"
     RESTORE_OK=true
@@ -173,6 +194,11 @@ for db_name in "${DATABASES[@]}"; do
   else
     error "FAIL: $db_name backup verification failed"
     FAILED=$((FAILED + 1))
+  fi
+
+  # Clean up decrypted temp file
+  if [ -n "$DECRYPTED_TEMP" ]; then
+    rm -f "$DECRYPTED_TEMP"
   fi
 
   # Drop temp database
