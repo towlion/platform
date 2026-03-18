@@ -10,8 +10,6 @@ towlion/
   platform             # Architecture docs and platform tools
   app-template         # Template for bootstrapping new apps
   todo-app             # Todo CRUD application
-  hello-world          # Multi-app deployment test
-  starter-app          # Created from app-template
   wit                  # Work Item Tracker (Kanban board)
 ```
 

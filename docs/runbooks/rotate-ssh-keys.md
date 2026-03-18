@@ -33,7 +33,7 @@ ssh -i ~/.ssh/towlion-deploy-new deploy@<SERVER_HOST> "echo 'New key works'"
 ```bash
 NEW_KEY=$(cat ~/.ssh/towlion-deploy-new)
 
-for repo in towlion/todo-app towlion/hello-world towlion/starter-app towlion/wit; do
+for repo in towlion/todo-app towlion/wit; do
   gh secret set SERVER_SSH_KEY --repo "$repo" --body "$NEW_KEY"
   echo "Updated $repo"
 done
@@ -74,5 +74,5 @@ ssh deploy@<SERVER_HOST> "wc -l ~/.ssh/authorized_keys"
 # Should output: 1
 
 # Confirm deploy works
-gh workflow run deploy.yml --repo towlion/hello-world
+gh workflow run deploy.yml --repo towlion/todo-app
 ```
