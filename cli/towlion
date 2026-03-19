@@ -20,20 +20,46 @@ error() { echo -e "${RED}[ERROR]${NC} $*"; }
 CONFIG_FILE="${HOME}/.towlion.conf"
 
 load_config() {
+  local profile="${TOWLION_PROFILE:-default}"
+
+  SERVER_HOST=""
+  SERVER_USER=""
+  SSH_KEY_PATH=""
+
   if [ -f "$CONFIG_FILE" ]; then
-    # shellcheck source=/dev/null
-    source "$CONFIG_FILE"
+    local current_section="default"
+    while IFS= read -r line || [ -n "$line" ]; do
+      # Skip comments and blank lines
+      [[ "$line" =~ ^[[:space:]]*# ]] && continue
+      [[ -z "${line// }" ]] && continue
+      # Section header
+      if [[ "$line" =~ ^\[([a-zA-Z0-9_-]+)\]$ ]]; then
+        current_section="${BASH_REMATCH[1]}"
+        continue
+      fi
+      # Key=Value in matching section
+      if [[ "$current_section" == "$profile" && "$line" =~ ^([A-Z_]+)=(.*)$ ]]; then
+        local key="${BASH_REMATCH[1]}"
+        local val="${BASH_REMATCH[2]}"
+        case "$key" in
+          SERVER_HOST)  SERVER_HOST="$val" ;;
+          SERVER_USER)  SERVER_USER="$val" ;;
+          SSH_KEY_PATH) SSH_KEY_PATH="$val" ;;
+        esac
+      fi
+    done < "$CONFIG_FILE"
   fi
 
-  SERVER_HOST="${SERVER_HOST:-}"
   SERVER_USER="${SERVER_USER:-deploy}"
   SSH_KEY_PATH="${SSH_KEY_PATH:-${HOME}/.ssh/id_rsa}"
 }
 
 require_config() {
   if [ -z "$SERVER_HOST" ]; then
-    error "SERVER_HOST not configured."
-    echo "Create ${CONFIG_FILE} with:"
+    local profile="${TOWLION_PROFILE:-default}"
+    error "SERVER_HOST not configured for profile '${profile}'."
+    echo "Add to ${CONFIG_FILE}:"
+    echo "  [${profile}]"
     echo "  SERVER_HOST=your-server-ip"
     echo "  SERVER_USER=deploy"
     echo "  SSH_KEY_PATH=~/.ssh/id_rsa"
@@ -149,8 +175,53 @@ cmd_create() {
   info "App created: towlion/${app}"
   info "Next steps:"
   echo "  1. Edit deploy/.env on the server: ssh ${SERVER_USER}@${SERVER_HOST}"
-  echo "  2. Set GitHub secrets: SERVER_HOST, SERVER_USER, SERVER_SSH_KEY, APP_DOMAIN"
+  echo "  2. Run: towlion secrets ${app} <your-app-domain>"
   echo "  3. Push to main to trigger first deploy"
+}
+
+cmd_secrets() {
+  local app="${1:-}"
+  if [ -z "$app" ]; then
+    error "Usage: towlion secrets <app-name> <app-domain> [--preview-domain <domain>]"
+    exit 1
+  fi
+  local domain="${2:-}"
+  if [ -z "$domain" ]; then
+    error "Usage: towlion secrets <app-name> <app-domain> [--preview-domain <domain>]"
+    exit 1
+  fi
+  shift 2
+
+  local preview_domain=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --preview-domain) preview_domain="$2"; shift 2 ;;
+      *) error "Unknown option: $1"; exit 1 ;;
+    esac
+  done
+
+  if ! command -v gh &>/dev/null; then
+    error "GitHub CLI (gh) is required. Install: https://cli.github.com"
+    exit 1
+  fi
+  require_config
+
+  local repo="towlion/${app}"
+  info "Setting GitHub secrets for ${repo}..."
+
+  gh secret set SERVER_HOST --repo "$repo" --body "$SERVER_HOST"
+  gh secret set SERVER_USER --repo "$repo" --body "$SERVER_USER"
+  gh secret set SERVER_SSH_KEY --repo "$repo" < "$SSH_KEY_PATH"
+  gh secret set APP_DOMAIN --repo "$repo" --body "$domain"
+
+  if [ -n "$preview_domain" ]; then
+    gh secret set PREVIEW_DOMAIN --repo "$repo" --body "$preview_domain"
+    info "Set 5 secrets (including PREVIEW_DOMAIN)"
+  else
+    info "Set 4 secrets"
+  fi
+
+  info "Done. Secrets configured for ${repo}"
 }
 
 cmd_deploy() {
@@ -258,13 +329,14 @@ cmd_alerts() {
 cmd_help() {
   echo -e "${BOLD}towlion${NC} v${VERSION} — Towlion platform CLI"
   echo ""
-  echo -e "${BOLD}Usage:${NC} towlion <command> [options]"
+  echo -e "${BOLD}Usage:${NC} towlion [--profile <name>] <command> [options]"
   echo ""
   echo -e "${BOLD}Commands:${NC}"
   echo "  status              List all apps with container state and health"
   echo "  logs <app>          Tail app logs"
   echo "  health [app|all]    Check /health endpoints"
   echo "  create <app>        Create repo from template + provision credentials"
+  echo "  secrets <app> <domain>  Set GitHub secrets for a repo"
   echo "  deploy <app>        Trigger deploy workflow via GitHub Actions"
   echo "  restart <app>       Restart app containers"
   echo "  backup [app|all]    Run backup now"
@@ -280,6 +352,10 @@ cmd_help() {
   echo "  SERVER_HOST=<ip>              Server IP address"
   echo "  SERVER_USER=deploy            SSH username (default: deploy)"
   echo "  SSH_KEY_PATH=~/.ssh/id_rsa    SSH key path"
+  echo ""
+  echo -e "${BOLD}Profiles:${NC}"
+  echo "  --profile <name>         Use a named profile (default: default)"
+  echo "  TOWLION_PROFILE=<name>   Or set via environment variable"
 }
 
 cmd_version() {
@@ -287,6 +363,14 @@ cmd_version() {
 }
 
 # --- Main ---
+
+# Parse global options
+while [[ "${1:-}" == --* ]]; do
+  case "$1" in
+    --profile) TOWLION_PROFILE="$2"; shift 2 ;;
+    *) break ;;
+  esac
+done
 
 load_config
 
@@ -298,6 +382,7 @@ case "$COMMAND" in
   logs)     cmd_logs "$@" ;;
   health)   cmd_health "$@" ;;
   create)   cmd_create "$@" ;;
+  secrets)  cmd_secrets "$@" ;;
   deploy)   cmd_deploy "$@" ;;
   restart)  cmd_restart "$@" ;;
   backup)   cmd_backup "$@" ;;

@@ -113,6 +113,13 @@ cp deploy/env.template deploy/.env
 
 The deploy workflow will auto-update `deploy/.env` with the correct credentials on the next push.
 
+!!! tip "CLI shortcut"
+    The `towlion create` command handles repo creation, credential provisioning, cloning, and env setup in one step:
+    ```bash
+    towlion create my-app
+    ```
+    See the [CLI Reference](cli.md) for installation and configuration.
+
 !!! warning
     The `deploy` user needs SSH access to your GitHub repo to `git pull`. Add the deploy user's public key (`/home/deploy/.ssh/id_ed25519.pub`) as a deploy key on your GitHub repository, or use HTTPS cloning with a personal access token.
 
@@ -163,6 +170,13 @@ In your forked repository on GitHub, go to **Settings > Secrets and variables > 
 
 Optionally, add `PREVIEW_DOMAIN` (e.g., `example.com`) to enable preview environments for pull requests.
 
+!!! tip "CLI shortcut"
+    The `towlion secrets` command sets all four secrets from your `~/.towlion.conf`:
+    ```bash
+    towlion secrets my-app app.example.com
+    towlion secrets my-app app.example.com --preview-domain example.com
+    ```
+
 ### Generate a deploy SSH key
 
 Create a dedicated key pair for deployment:
@@ -212,6 +226,12 @@ GitHub Actions
 
 The workflow typically completes in 2-5 minutes.
 
+!!! tip "CLI shortcut"
+    You can also trigger deploys from the command line:
+    ```bash
+    towlion deploy my-app
+    ```
+
 !!! tip
     If the workflow does not appear, check that the `.github/workflows/deploy.yml` file exists in your repository. Repositories created from the app template include this file by default.
 
@@ -230,6 +250,11 @@ Expected response:
 ```json
 {"status": "ok"}
 ```
+
+!!! tip "CLI shortcut"
+    ```bash
+    towlion health my-app
+    ```
 
 Open `https://app.example.com` in your browser. You should see your application with a valid TLS certificate (Caddy provisions this automatically via Let's Encrypt).
 
@@ -302,6 +327,12 @@ All services should show `Up` status. Check application logs:
 ```bash
 docker compose logs app --tail 50
 ```
+
+!!! tip "CLI shortcut"
+    ```bash
+    towlion status        # container states at a glance
+    towlion logs my-app   # tail app logs
+    ```
 
 Common causes:
 

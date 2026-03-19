@@ -20,6 +20,31 @@ SERVER_USER=deploy
 SSH_KEY_PATH=~/.ssh/id_rsa
 ```
 
+## Profiles
+
+The config file supports INI-style `[profile]` sections for managing multiple servers. Existing flat configs (no section headers) are treated as `[default]`.
+
+```ini
+[default]
+SERVER_HOST=143.198.104.8
+SERVER_USER=deploy
+SSH_KEY_PATH=~/.ssh/id_rsa
+
+[staging]
+SERVER_HOST=10.0.0.5
+SERVER_USER=deploy
+SSH_KEY_PATH=~/.ssh/staging_key
+```
+
+Select a profile with `--profile` or the `TOWLION_PROFILE` environment variable:
+
+```bash
+towlion --profile staging status
+TOWLION_PROFILE=staging towlion status
+```
+
+If no profile is specified, `default` is used.
+
 ## Commands
 
 ### `towlion status`
@@ -41,6 +66,17 @@ Create a new app from the template:
 2. Provisions PostgreSQL and MinIO credentials on the server
 3. Clones the repo on the server
 4. Creates `deploy/.env` from template
+
+Requires `gh` CLI to be installed and authenticated.
+
+### `towlion secrets <app> <domain> [--preview-domain <domain>]`
+
+Set GitHub Actions secrets for an app repo. Reads `SERVER_HOST`, `SERVER_USER`, and `SSH_KEY_PATH` from `~/.towlion.conf` and sets them as repo secrets along with `APP_DOMAIN`.
+
+```bash
+towlion secrets myapp app.example.com
+towlion secrets myapp app.example.com --preview-domain example.com
+```
 
 Requires `gh` CLI to be installed and authenticated.
 
