@@ -171,7 +171,7 @@ In your forked repository on GitHub, go to **Settings > Secrets and variables > 
 Optionally, add `PREVIEW_DOMAIN` (e.g., `example.com`) to enable preview environments for pull requests.
 
 !!! tip "CLI shortcut"
-    The `towlion secrets` command sets all four secrets from your `~/.towlion.conf`:
+    The `towlion secrets` command sets all required GitHub secrets using your local config and SSH key:
     ```bash
     towlion secrets my-app app.example.com
     towlion secrets my-app app.example.com --preview-domain example.com
