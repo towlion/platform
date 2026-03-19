@@ -39,12 +39,12 @@ cd app-template
 Create a Debian server from your preferred provider. Make sure:
 
 - Ports **22**, **80**, and **443** are open in the firewall
-- You can SSH in as a non-root user with sudo access
+- You can SSH in as root (or the user your provider creates)
 
 Verify access:
 
 ```bash
-ssh deploy@YOUR_SERVER_IP
+ssh root@YOUR_SERVER_IP
 ```
 
 You should see a shell prompt. If this works, you are ready to bootstrap.
