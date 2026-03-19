@@ -165,6 +165,15 @@ else
   info "User 'deploy' added to docker group"
 fi
 
+SUDOERS_FILE="/etc/sudoers.d/deploy"
+if [[ -f "$SUDOERS_FILE" ]]; then
+  info "Sudoers entry for deploy already exists"
+else
+  echo "deploy ALL=(ALL) NOPASSWD: ALL" > "$SUDOERS_FILE"
+  chmod 440 "$SUDOERS_FILE"
+  info "Passwordless sudo granted to deploy user"
+fi
+
 DEPLOY_SSH_DIR="/home/deploy/.ssh"
 if [[ ! -d "$DEPLOY_SSH_DIR" ]]; then
   mkdir -p "$DEPLOY_SSH_DIR"
@@ -191,6 +200,9 @@ fi
 SSHD_HARDENING="/etc/ssh/sshd_config.d/99-towlion-hardening.conf"
 if [[ -f "$SSHD_HARDENING" ]]; then
   info "SSH hardening config already exists"
+elif [[ ! -s /home/deploy/.ssh/authorized_keys ]]; then
+  warn "Skipping SSH hardening — deploy user has no SSH keys"
+  warn "Add keys to /home/deploy/.ssh/authorized_keys, then re-run bootstrap to harden SSH"
 else
   cat > "$SSHD_HARDENING" <<'EOF'
 PermitRootLogin no
@@ -1402,14 +1414,10 @@ fi
 # --- Copy Infrastructure Scripts ---
 
 SCRIPT_DIR="/opt/platform/infrastructure"
-for script in create-app-credentials.sh backup-postgres.sh restore-postgres.sh \
-              check-alerts.sh update-images.sh usage-report.sh scan-images.sh \
-              deploy-blue-green.sh verify-backup.sh rotate-credentials.sh; do
-  SRC_SCRIPT="$(dirname "$0")/$script"
-  if [[ -f "$SRC_SCRIPT" ]]; then
-    cp "$SRC_SCRIPT" "$SCRIPT_DIR/$script"
-    chmod +x "$SCRIPT_DIR/$script"
-  fi
+for src in "$(dirname "$0")"/*.sh; do
+  [[ "$(basename "$src")" == "bootstrap-server.sh" ]] && continue
+  cp "$src" "$SCRIPT_DIR/"
+  chmod +x "$SCRIPT_DIR/$(basename "$src")"
 done
 chown -R deploy:deploy "$SCRIPT_DIR"
 info "Infrastructure scripts copied to $SCRIPT_DIR"

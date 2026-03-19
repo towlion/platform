@@ -51,11 +51,12 @@ You should see a shell prompt. If this works, you are ready to bootstrap.
 
 ## Step 3: Bootstrap the server
 
-SSH into your server as root and run the bootstrap script. This installs Docker, creates the `deploy` user, starts all platform services, and generates credentials:
+SSH into your server as root. Download and run the bootstrap script — no `git` required:
 
 ```bash
 ssh root@YOUR_SERVER_IP
-git clone https://github.com/towlion/platform.git /tmp/platform
+mkdir -p /tmp/platform && curl -fsSL https://github.com/towlion/platform/archive/refs/heads/main.tar.gz \
+  | tar xz --strip-components=1 -C /tmp/platform
 sudo ACME_EMAIL=you@example.com bash /tmp/platform/infrastructure/bootstrap-server.sh
 ```
 
@@ -68,7 +69,7 @@ sudo ACME_EMAIL=you@example.com bash /tmp/platform/infrastructure/bootstrap-serv
 Verify the bootstrap was successful:
 
 ```bash
-bash /tmp/platform/infrastructure/verify-server.sh
+/opt/platform/infrastructure/verify-server.sh
 ```
 
 All checks should pass. The script creates:
