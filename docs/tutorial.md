@@ -49,6 +49,14 @@ ssh root@YOUR_SERVER_IP
 
 You should see a shell prompt. If this works, you are ready to bootstrap.
 
+!!! tip "Automated provisioning"
+    Instead of creating a server manually, you can use [towlion/infra](https://github.com/towlion/infra) to provision a Debian server with a single command:
+    ```bash
+    ./towlion-infra init --provider digitalocean
+    ./towlion-infra apply --domain example.com
+    ```
+    This creates a server with the correct firewall rules, a data volume, SSH key, and optional DNS — ready for bootstrap. See the [infra README](https://github.com/towlion/infra) for setup and usage.
+
 ## Step 3: Bootstrap the server
 
 SSH into your server as root. Download and run the bootstrap script — no `git` required:

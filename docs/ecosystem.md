@@ -8,6 +8,7 @@ The Towlion GitHub organization serves as a catalog of deployable applications. 
 towlion/
   .github              # Organization profile, community health files, and reusable workflows
   platform             # Architecture docs and platform tools
+  infra                # Infrastructure provisioning CLI (OpenTofu)
   app-template         # Template for bootstrapping new apps
   todo-app             # Todo CRUD application
   wit                  # Work Item Tracker (Kanban board)
@@ -31,6 +32,17 @@ The meta repository for the ecosystem. Contains:
 - Deployment guides
 - Developer CLI (`cli/towlion`) — see [CLI reference](cli.md)
 - Infrastructure scripts (blue-green deploy, backup verification, credential rotation)
+
+### Infrastructure CLI ([`towlion/infra`](https://github.com/towlion/infra))
+
+CLI tool for provisioning Towlion servers on DigitalOcean or AWS using [OpenTofu](https://opentofu.org). Creates a Debian server with:
+
+- Firewall (ports 22, 80, 443)
+- 50 GB data volume mounted at `/data`
+- SSH key pair
+- Optional DNS zone with root and wildcard A records
+
+Usage: `./towlion-infra init --provider <aws|digitalocean>` then `./towlion-infra apply`.
 
 ### Application Template ([`towlion/app-template`](https://github.com/towlion/app-template))
 
