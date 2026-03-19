@@ -136,10 +136,10 @@ else
   fail "MinIO health endpoint is not responding"
 fi
 
-if curl -s -o /dev/null -w '%{http_code}' http://localhost:80 | grep -qE '^[0-9]+$'; then
-  pass "Caddy is responding on port 80"
+if curl -s -o /dev/null --connect-timeout 3 http://localhost:80 2>/dev/null; RC=$?; [[ $RC -eq 0 || $RC -eq 56 ]]; then
+  pass "Caddy is listening on port 80"
 else
-  fail "Caddy is not responding on port 80"
+  fail "Caddy is not listening on port 80"
 fi
 
 # --- Loki Health ---
