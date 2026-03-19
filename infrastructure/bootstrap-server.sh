@@ -48,7 +48,7 @@ echo
 
 echo "Installing system packages..."
 apt-get update -qq
-apt-get install -y -qq git curl ufw vnstat unattended-upgrades apt-listchanges fail2ban > /dev/null
+apt-get install -y -qq git curl ufw vnstat unattended-upgrades apt-listchanges fail2ban cron > /dev/null
 info "System packages installed (git, curl, ufw, vnstat, unattended-upgrades, fail2ban)"
 
 # --- Firewall ---
@@ -91,23 +91,6 @@ EOF
   systemctl enable fail2ban
   systemctl restart fail2ban
   info "fail2ban configured (SSH jail: maxretry=5, bantime=3600s, findtime=600s)"
-fi
-
-# --- SSH Hardening ---
-
-SSHD_HARDENING="/etc/ssh/sshd_config.d/99-towlion-hardening.conf"
-if [[ -f "$SSHD_HARDENING" ]]; then
-  info "SSH hardening config already exists"
-else
-  cat > "$SSHD_HARDENING" <<'EOF'
-PermitRootLogin no
-PasswordAuthentication no
-MaxAuthTries 3
-X11Forwarding no
-EOF
-
-  systemctl restart sshd
-  info "SSH hardened (no root login, no password auth, MaxAuthTries=3, no X11)"
 fi
 
 # --- Unattended Upgrades ---
@@ -185,13 +168,39 @@ fi
 DEPLOY_SSH_DIR="/home/deploy/.ssh"
 if [[ ! -d "$DEPLOY_SSH_DIR" ]]; then
   mkdir -p "$DEPLOY_SSH_DIR"
-  touch "$DEPLOY_SSH_DIR/authorized_keys"
+  if [[ -n "${SUDO_USER:-}" ]] && [[ -f "/home/${SUDO_USER}/.ssh/authorized_keys" ]]; then
+    cp "/home/${SUDO_USER}/.ssh/authorized_keys" "$DEPLOY_SSH_DIR/authorized_keys"
+    info "Copied SSH keys from ${SUDO_USER} to deploy user"
+  elif [[ -f /root/.ssh/authorized_keys ]]; then
+    cp /root/.ssh/authorized_keys "$DEPLOY_SSH_DIR/authorized_keys"
+    info "Copied SSH keys from root to deploy user"
+  else
+    touch "$DEPLOY_SSH_DIR/authorized_keys"
+    warn "No SSH keys found to copy — add keys to /home/deploy/.ssh/authorized_keys manually"
+  fi
   chmod 700 "$DEPLOY_SSH_DIR"
   chmod 600 "$DEPLOY_SSH_DIR/authorized_keys"
   chown -R deploy:deploy "$DEPLOY_SSH_DIR"
   info "SSH directory created for deploy user"
 else
   info "SSH directory already exists for deploy user"
+fi
+
+# --- SSH Hardening ---
+
+SSHD_HARDENING="/etc/ssh/sshd_config.d/99-towlion-hardening.conf"
+if [[ -f "$SSHD_HARDENING" ]]; then
+  info "SSH hardening config already exists"
+else
+  cat > "$SSHD_HARDENING" <<'EOF'
+PermitRootLogin no
+PasswordAuthentication no
+MaxAuthTries 3
+X11Forwarding no
+EOF
+
+  systemctl restart sshd
+  info "SSH hardened (no root login, no password auth, MaxAuthTries=3, no X11)"
 fi
 
 # --- Directories ---
@@ -212,6 +221,9 @@ chown -R 472:472 /data/grafana
 chown -R 10001:10001 /data/loki
 # Prometheus runs as nobody (UID 65534) inside its container
 chown -R 65534:65534 /data/prometheus
+# Postgres and Redis run as UID 999 inside their containers
+chown -R 999:999 /data/postgres
+chown -R 999:999 /data/redis
 info "Directory structure created (/data/*, /opt/apps, /opt/platform)"
 
 # --- Docker Network ---

@@ -47,6 +47,18 @@ DB_PASSWORD=$(openssl rand -base64 24)
 S3_PASSWORD=$(openssl rand -base64 24)
 JWT_SECRET=$(openssl rand -base64 32)
 
+# PostgreSQL database creation (idempotent)
+info "Checking PostgreSQL database..."
+if docker compose -f /opt/platform/docker-compose.yml exec -T postgres \
+  psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = '${APP_DB}'" | grep -q 1; then
+  warn "PostgreSQL database '${APP_DB}' already exists, skipping creation"
+else
+  info "Creating PostgreSQL database '${APP_DB}'..."
+  docker compose -f /opt/platform/docker-compose.yml exec -T postgres \
+    psql -U postgres -c "CREATE DATABASE ${APP_DB}"
+  info "PostgreSQL database created"
+fi
+
 # PostgreSQL user creation (idempotent)
 info "Checking PostgreSQL user..."
 if docker compose -f /opt/platform/docker-compose.yml exec -T postgres psql -U postgres -tc "SELECT 1 FROM pg_roles WHERE rolname = '${APP_USER}'" | grep -q 1; then

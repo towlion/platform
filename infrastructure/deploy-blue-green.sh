@@ -190,7 +190,12 @@ fi
 
 # Step 10: Write Caddyfile and reload Caddy
 info "Step 8/8: Swapping traffic to new slot..."
-echo "$CADDYFILE_CONTENT" > "/opt/platform/caddy-apps/${APP_NAME}.caddy"
+echo "$CADDYFILE_CONTENT" \
+  | sed "s/${APP_NAME}-\([a-z]*\)-1/${APP_NAME}-${NEXT_SLOT}-\1-1/g" \
+  | sed "s/\bapp:/${APP_NAME}-${NEXT_SLOT}-app-1:/g" \
+  | sed "s/\bfrontend:/${APP_NAME}-${NEXT_SLOT}-frontend-1:/g" \
+  | sed "s/{\\\$APP_DOMAIN}/${APP_DOMAIN}/g" \
+  > "/opt/platform/caddy-apps/${APP_NAME}.caddy"
 docker compose -f "$PLATFORM_COMPOSE" exec -T caddy caddy reload --config /etc/caddy/Caddyfile
 
 # Step 11: Verify external health
