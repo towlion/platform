@@ -136,7 +136,7 @@ else
   fail "MinIO health endpoint is not responding"
 fi
 
-if curl -sf -o /dev/null http://localhost:80; then
+if curl -s -o /dev/null -w '%{http_code}' http://localhost:80 | grep -qE '^[0-9]+$'; then
   pass "Caddy is responding on port 80"
 else
   fail "Caddy is not responding on port 80"
