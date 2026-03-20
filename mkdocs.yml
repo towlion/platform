@@ -46,6 +46,7 @@ nav:
       - Self-Hosted Runners: self-hosted-runners.md
   - Operations:
       - CLI Reference: cli.md
+      - Secrets Reference: secrets.md
       - Observability: observability.md
       - Troubleshooting: troubleshooting.md
       - Runbooks:
