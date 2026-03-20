@@ -1,0 +1,2233 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Self-hosted GitHub-native micro-PaaS for deploying small web applications">
+      
+      
+      
+        <link rel="canonical" href="https://towlion.github.io/platform/server-contract/">
+      
+      
+        <link rel="prev" href="../spec/">
+      
+      
+        <link rel="next" href="../deployment/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Server Contract - Towlion Platform</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"IBM Plex Sans";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/custom.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    .md-typeset h1,
+    .md-typeset h2,
+    .md-typeset h3,
+    .md-typeset h4,
+    .md-typeset h5,
+    .md-typeset h6 {
+      font-family: "Syne", sans-serif;
+      font-weight: 700;
+    }
+  </style>
+
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#server-contract" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="https://towlion.github.io/" title="Towlion Platform" class="md-header__button md-logo" aria-label="Towlion Platform" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Towlion Platform
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Server Contract
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/towlion/platform" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    towlion/platform
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href=".." class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../architecture/" class="md-tabs__link">
+          
+  
+  
+  Architecture
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../deployment/" class="md-tabs__link">
+          
+  
+  
+  Deployment
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../cli/" class="md-tabs__link">
+          
+  
+  
+  Operations
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../ecosystem/" class="md-tabs__link">
+          
+  
+  
+  Project
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="https://towlion.github.io/" title="Towlion Platform" class="md-nav__button md-logo" aria-label="Towlion Platform" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Towlion Platform
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/towlion/platform" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    towlion/platform
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scope/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scope
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorial/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorial
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spec/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    App Specification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Server Contract
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Server Contract
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#server-directory-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Server Directory Layout
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bootstrap-to-deploy-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bootstrap to Deploy Lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#app-workflow-server-assumptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        App Workflow Server Assumptions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#infrastructure-scripts-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Infrastructure Scripts Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#server-hardening" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Server Hardening
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#caddyfile-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caddyfile Generation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#per-app-credentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-App Credentials
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resource-metrics-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resource Metrics (Optional)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Deployment
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../self-hosting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Self-Hosting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../preview-environments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preview Environments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deploy-prompt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deploy Prompt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../self-hosted-runners/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Self-Hosted Runners
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../secrets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Secrets Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Observability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Runbooks
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runbooks/restart-app/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Restart App
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runbooks/add-new-app/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Add New App
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runbooks/rotate-credentials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rotate Credentials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runbooks/restore-backup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Restore Backup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runbooks/debug-failed-deploy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debug Failed Deploy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Project
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ecosystem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ecosystem
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../governance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../onboarding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Onboarding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decisions
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Decisions
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../decisions/001-github-as-control-plane/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GitHub as Control Plane
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../decisions/002-caddy-over-nginx/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Caddy Over Nginx
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../decisions/003-single-server-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Single-Server Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../decisions/004-fork-based-self-hosting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fork-Based Self-Hosting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../decisions/005-apparmor-over-selinux/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AppArmor Over SELinux
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#server-directory-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Server Directory Layout
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bootstrap-to-deploy-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bootstrap to Deploy Lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#app-workflow-server-assumptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        App Workflow Server Assumptions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#infrastructure-scripts-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Infrastructure Scripts Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#server-hardening" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Server Hardening
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#caddyfile-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caddyfile Generation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#per-app-credentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-App Credentials
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resource-metrics-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resource Metrics (Optional)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="server-contract">Server Contract</h1>
+<p>This document defines the contract between the platform infrastructure (bootstrapped by <code>bootstrap-server.sh</code>) and the app deployment workflows (<code>deploy.yml</code>, <code>preview.yml</code>). It explains the directory layout, lifecycle, and assumptions that connect them.</p>
+<h2 id="server-directory-layout">Server Directory Layout</h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>/opt/platform/                          # Platform root (created by bootstrap-server.sh)
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  docker-compose.yml                    # Platform services (7 core + 3 optional metrics)
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  .env                                  # Platform credentials (POSTGRES_PASSWORD, MINIO_ROOT_*, GRAFANA_ADMIN_PASSWORD, ACME_EMAIL, OPS_DOMAIN, ALERT_REPO, COMPOSE_PROFILES)
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  .bootstrapped                         # Timestamp marker from last bootstrap run
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  Caddyfile                             # Global Caddyfile — imports /etc/caddy/apps/*.caddy
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  caddy-apps/                           # Per-app Caddyfile fragments (written by deploy/preview workflows)
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    &lt;app-name&gt;.caddy                    #   Production route for an app
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    &lt;app-name&gt;-pr-&lt;N&gt;.caddy             #   Preview route for a PR
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    ops.caddy                           #   Grafana route (created by bootstrap)
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>  credentials/                          # Per-app credential files (created by create-app-credentials.sh)
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    &lt;app-name&gt;.env                      #   DB_USER, DB_PASSWORD, S3_ACCESS_KEY, S3_SECRET_KEY
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>  infrastructure/                       # Ops scripts (copied from platform repo by bootstrap)
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    deploy-blue-green.sh                #   Blue-green zero-downtime deploy
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    verify-backup.sh                    #   Backup restore verification
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    rotate-credentials.sh               #   Credential rotation without downtime
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>  infrastructure/                       # Ops scripts (copied from platform repo by bootstrap)
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    backup-postgres.sh
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    restore-postgres.sh
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    check-alerts.sh
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    update-images.sh
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    create-app-credentials.sh
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    usage-report.sh
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>  loki-config.yml                       # Loki configuration
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>  promtail-config.yml                   # Promtail configuration
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>  prometheus.yml                        # Prometheus scrape config (always created)
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>  grafana/                              # Grafana provisioning files and dashboards
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    provisioning/datasources/
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    provisioning/dashboards/
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    dashboards/
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>/opt/apps/                              # Application root (created by bootstrap-server.sh)
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>  &lt;app-name&gt;/                           # Cloned app repo (created manually by admin)
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    .deploy-slot                        # Active blue-green slot (&quot;blue&quot; or &quot;green&quot;)
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    deploy/
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>      .env                              # App runtime config (created manually from env.template)
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>      docker-compose.yml                # App services (joins towlion network)
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>  &lt;app-name&gt;-pr-&lt;N&gt;/                    # Preview clone (created/destroyed by preview.yml)
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>/data/                                  # Persistent data volumes (created by bootstrap-server.sh)
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>  postgres/                             # PostgreSQL data directory
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>  redis/                                # Redis data directory
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>  minio/                                # MinIO object storage
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>  caddy/data/                           # Caddy TLS certificates
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>  caddy/config/                         # Caddy config state
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>  loki/                                 # Loki log storage
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>  grafana/                              # Grafana state
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>  prometheus/                           # Prometheus data (created always, used when metrics enabled)
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>  backups/postgres/                     # pg_dump backup files (7-day retention, optional .dump.enc encryption)
+</code></pre></div>
+<h2 id="bootstrap-to-deploy-lifecycle">Bootstrap to Deploy Lifecycle</h2>
+<ol>
+<li>
+<p><strong>Bootstrap the server</strong> — Run <code>sudo bash infrastructure/bootstrap-server.sh</code> on a fresh Debian machine. This creates the directory layout above, installs Docker, creates the <code>deploy</code> user, generates platform credentials, starts the 7 core platform services (plus 3 optional metrics services if enabled), copies infrastructure scripts, and installs cron jobs.</p>
+</li>
+<li>
+<p><strong>Configure DNS</strong> — Point app domains and <code>*.preview.&lt;app&gt;.&lt;domain&gt;</code> (one per app) to the server IP.</p>
+</li>
+<li>
+<p><strong>Clone the app repo</strong> — SSH in as <code>deploy</code> and clone the app to <code>/opt/apps/&lt;name&gt;/</code>.</p>
+</li>
+<li>
+<p><strong>Create <code>deploy/.env</code></strong> — Copy <code>deploy/env.template</code> and fill in values (DATABASE_URL, S3 credentials, etc.).</p>
+</li>
+<li>
+<p><strong>Provision per-app credentials (optional)</strong> — Run <code>create-app-credentials.sh &lt;name&gt;</code> to create an isolated PostgreSQL user and MinIO bucket. Credentials are written to <code>/opt/platform/credentials/&lt;name&gt;.env</code>.</p>
+</li>
+<li>
+<p><strong>Configure GitHub secrets</strong> — Set <code>SERVER_HOST</code>, <code>SERVER_USER</code>, <code>SERVER_SSH_KEY</code>, and <code>APP_DOMAIN</code> on the app repo. Add <code>PREVIEW_DOMAIN</code> for preview environments.</p>
+</li>
+<li>
+<p><strong>Push to main</strong> — Triggers <code>deploy.yml</code>:</p>
+</li>
+<li>SSHes into the server as <code>deploy</code></li>
+<li>Calls <code>deploy-blue-green.sh</code> which performs a zero-downtime blue-green deploy:<ul>
+<li>Reads current slot from <code>/opt/apps/&lt;name&gt;/.deploy-slot</code> (defaults to "blue")</li>
+<li>Pulls latest code, injects credentials, builds and starts the next slot</li>
+<li>Waits for Docker healthcheck, runs Alembic migrations</li>
+<li>Swaps Caddyfile to point to the new slot, reloads Caddy</li>
+<li>Verifies external health, then stops the old slot</li>
+<li>On any failure: tears down the new slot, old slot keeps serving traffic</li>
+</ul>
+</li>
+</ol>
+<h2 id="app-workflow-server-assumptions">App Workflow Server Assumptions</h2>
+<p>The <code>deploy.yml</code> and <code>preview.yml</code> workflows SSH into the server and depend on the following structure being in place:</p>
+<table>
+<thead>
+<tr>
+<th>Path / Resource</th>
+<th>Purpose</th>
+<th>Created By</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/opt/platform/docker-compose.yml</code></td>
+<td>Platform services (postgres, redis, caddy, etc.)</td>
+<td><code>bootstrap-server.sh</code></td>
+</tr>
+<tr>
+<td><code>/opt/platform/.env</code></td>
+<td><code>POSTGRES_PASSWORD</code> for database operations</td>
+<td><code>bootstrap-server.sh</code></td>
+</tr>
+<tr>
+<td><code>/opt/platform/caddy-apps/</code></td>
+<td>Writable directory for per-app Caddyfile fragments</td>
+<td><code>bootstrap-server.sh</code></td>
+</tr>
+<tr>
+<td><code>/opt/platform/credentials/&lt;name&gt;.env</code></td>
+<td>Per-app DB/S3 credentials (optional)</td>
+<td><code>create-app-credentials.sh</code></td>
+</tr>
+<tr>
+<td><code>/opt/apps/&lt;name&gt;/</code></td>
+<td>Cloned app repo with <code>deploy/.env</code> configured</td>
+<td>Admin (manual)</td>
+</tr>
+<tr>
+<td><code>towlion</code> Docker network</td>
+<td>Shared network connecting platform services and app containers</td>
+<td><code>bootstrap-server.sh</code></td>
+</tr>
+<tr>
+<td><code>deploy</code> user</td>
+<td>SSH user with Docker group membership</td>
+<td><code>bootstrap-server.sh</code></td>
+</tr>
+</tbody>
+</table>
+<p>If any of these are missing, the workflow will fail. The bootstrap script is idempotent and can be re-run to restore missing structure.</p>
+<h2 id="infrastructure-scripts-reference">Infrastructure Scripts Reference</h2>
+<p>All scripts live in the platform repo under <code>infrastructure/</code> and are copied to <code>/opt/platform/infrastructure/</code> during bootstrap.</p>
+<table>
+<thead>
+<tr>
+<th>Script</th>
+<th>Purpose</th>
+<th>Invocation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bootstrap-server.sh</code></td>
+<td>Transform fresh Debian into running platform</td>
+<td>Manual (<code>sudo bash</code>)</td>
+</tr>
+<tr>
+<td><code>verify-server.sh</code></td>
+<td>Read-only health check of server state</td>
+<td>Manual (<code>bash</code>)</td>
+</tr>
+<tr>
+<td><code>create-app-credentials.sh</code></td>
+<td>Provision per-app PostgreSQL user + MinIO bucket</td>
+<td>Manual (<code>bash &lt;script&gt; &lt;app-name&gt;</code>)</td>
+</tr>
+<tr>
+<td><code>backup-postgres.sh</code></td>
+<td>Per-database <code>pg_dump</code> with 7-day retention, optional AES-256 encryption</td>
+<td>Cron: daily at 02:00</td>
+</tr>
+<tr>
+<td><code>restore-postgres.sh</code></td>
+<td>Restore a database from backup</td>
+<td>Manual (<code>bash &lt;script&gt;</code>)</td>
+</tr>
+<tr>
+<td><code>check-alerts.sh</code></td>
+<td>Check container health, disk, memory; create GitHub Issues</td>
+<td>Cron: every 5 minutes</td>
+</tr>
+<tr>
+<td><code>update-images.sh</code></td>
+<td>Pull latest Docker images and recreate containers</td>
+<td>Cron: weekly Sunday at 03:00</td>
+</tr>
+<tr>
+<td><code>usage-report.sh</code></td>
+<td>Generate 6-section resource usage report</td>
+<td>Manual (<code>bash</code>)</td>
+</tr>
+<tr>
+<td><code>scan-images.sh</code></td>
+<td>Scan running container images for vulnerabilities (Trivy), create GitHub Issues</td>
+<td>Cron: weekly Sunday at 04:00</td>
+</tr>
+<tr>
+<td><code>deploy-blue-green.sh</code></td>
+<td>Zero-downtime blue-green deploy with automatic rollback</td>
+<td>Called by <code>deploy.yml</code> workflow</td>
+</tr>
+<tr>
+<td><code>verify-backup.sh</code></td>
+<td>Restore backups to temp DB and verify integrity</td>
+<td>Cron: weekly Sunday at 05:00</td>
+</tr>
+<tr>
+<td><code>rotate-credentials.sh</code></td>
+<td>Rotate per-app or platform master credentials without downtime</td>
+<td>Manual (<code>bash &lt;script&gt; &lt;app-name&gt;</code> or <code>--platform</code>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="server-hardening">Server Hardening</h2>
+<p>The bootstrap script applies several security measures automatically. Self-hosters get these out of the box; no manual hardening steps are needed beyond running the bootstrap.</p>
+<p><strong>Firewall</strong> — UFW is configured to deny all incoming traffic except ports 22 (SSH), 80 (HTTP), and 443 (HTTPS). All other ports, including PostgreSQL (5432), Redis (6379), and MinIO (9000), are only reachable via the internal Docker network.</p>
+<p><strong>Automatic security updates</strong> — <code>unattended-upgrades</code> is installed and configured for the Debian security channel. Security patches are applied automatically without manual intervention.</p>
+<p><strong>Non-root deployment</strong> — A <code>deploy</code> user with Docker group membership handles all deployments. Workflows SSH in as <code>deploy</code>, never as root. The deploy user cannot modify system packages or firewall rules.</p>
+<p><strong>Credential isolation</strong> — The platform <code>.env</code> file is mode 600 (readable only by its owner). Per-app credentials are generated by <code>create-app-credentials.sh</code> and stored in separate files under <code>/opt/platform/credentials/</code>, each also mode 600.</p>
+<p><strong>Container resource limits</strong> — Every platform service and every app container has explicit CPU and memory limits in its Docker Compose file. This prevents any single container from exhausting server resources. The 7 core services use ~2.66G / 3.25 CPU. The 3 optional metrics services add 448M / 1.00 CPU when enabled.</p>
+<p><strong>Brute-force protection</strong> — fail2ban is installed with an SSH jail (systemd backend, since Debian 12 uses journald). Configuration: maxretry=5, bantime=3600s. IPs that exceed the retry limit are banned for one hour.</p>
+<p><strong>SSH hardening</strong> — A drop-in config at <code>/etc/ssh/sshd_config.d/99-towlion-hardening.conf</code> enforces: <code>PermitRootLogin no</code>, <code>PasswordAuthentication no</code>, <code>MaxAuthTries 3</code>, <code>X11Forwarding no</code>. Only key-based authentication as the <code>deploy</code> user is permitted.</p>
+<p><strong>Security headers</strong> — The platform Caddyfile includes a <code>(security_headers)</code> snippet that sets: <code>Strict-Transport-Security</code> (HSTS, max-age=31536000, includeSubDomains), <code>X-Content-Type-Options nosniff</code>, <code>X-Frame-Options DENY</code>, <code>Referrer-Policy strict-origin-when-cross-origin</code>, <code>Permissions-Policy</code> (camera, microphone, and geolocation denied), and strips the <code>Server</code> header. All app and ops Caddy routes import this snippet.</p>
+<p><strong>Rate limiting</strong> — Application-level rate limiting via <code>slowapi</code> (FastAPI middleware). Default limit: 60 requests/minute per IP. The <code>/health</code> endpoint is exempt from rate limiting since Docker healthchecks and monitoring hit it frequently.</p>
+<p><strong>Read-only container filesystems</strong> — App containers, Caddy, and Promtail run with <code>read_only: true</code> in their Docker Compose configuration. Writable areas (<code>/tmp</code>, <code>/app/__pycache__</code>) are mounted as <code>tmpfs</code>. Database services (PostgreSQL, Redis, MinIO) are not read-only due to PID files and temp tables.</p>
+<p><strong>Docker event audit logging</strong> — A systemd service (<code>docker-audit.service</code>) runs <code>docker events</code> with JSON output to <code>/var/log/docker-audit.log</code>. Promtail scrapes this file and forwards events to Loki (label: <code>job=docker-audit</code>). All container start, stop, die, and health_status events are captured.</p>
+<p><strong>Backup encryption</strong> — Backups can be encrypted at rest using AES-256-CBC. Set the <code>BACKUP_ENCRYPTION_KEY</code> environment variable to the path of a key file. When set, <code>backup-postgres.sh</code> pipes <code>pg_dump</code> output through <code>openssl enc</code> and produces <code>.dump.enc</code> files. <code>restore-postgres.sh</code> and <code>verify-backup.sh</code> automatically detect encrypted backups and decrypt them before restoring. If the key file is not set, backups are stored unencrypted (with a warning).</p>
+<p><strong>Log rotation</strong> — A logrotate config at <code>/etc/logrotate.d/towlion</code> rotates <code>/var/log/towlion-*.log</code> and <code>/var/log/docker-audit.log</code> daily, retaining 90 compressed copies. The <code>docker-audit.service</code> is restarted after rotation since it holds the log file open.</p>
+<p><strong>Log retention</strong> — Loki retains logs for 90 days (<code>retention_period: 2160h</code>). The compactor runs retention enforcement with a 2-hour delete delay.</p>
+<p><strong>Platform credential rotation</strong> — <code>rotate-credentials.sh --platform</code> rotates the PostgreSQL superuser password and/or MinIO root password. After rotation, all app health checks are verified. Use <code>--yes</code> to skip the confirmation prompt.</p>
+<p><strong>Image vulnerability scanning</strong> — Trivy is installed via the Aqua Security apt repository. Every deploy runs a non-blocking <code>trivy image</code> scan of the newly built app image (HIGH/CRITICAL severity). A weekly cron job (<code>scan-images.sh</code>, Sunday 04:00) scans all running container images.</p>
+<p><strong>Mandatory Access Control (AppArmor)</strong> — Debian 12 ships with AppArmor enabled by default. Docker automatically applies the <code>docker-default</code> AppArmor profile to all containers, which restricts capabilities like writing to <code>/proc</code> and <code>/sys</code>, mounting filesystems, and accessing raw sockets. No configuration is needed — this works out of the box.</p>
+<p>SELinux is <strong>not</strong> used. While SELinux is the standard MAC system on RHEL/Fedora, it is not well-suited for Debian:</p>
+<ul>
+<li>AppArmor is Debian's native MAC system, maintained by the Debian security team</li>
+<li>SELinux policies on Debian are incomplete and poorly maintained — the <code>selinux-policy-default</code> package lags far behind RHEL equivalents</li>
+<li>Docker + SELinux on Debian causes bind-mount labeling issues (<code>:z</code>/<code>:Z</code> volume flags) with no community support for troubleshooting</li>
+<li>Enabling SELinux on Debian requires switching from AppArmor, losing Docker's automatic profile enforcement</li>
+</ul>
+<p>Since AppArmor is already active and Docker integrates with it automatically, the platform's MAC requirements are met without any additional configuration.</p>
+<h2 id="caddyfile-generation">Caddyfile Generation</h2>
+<p>The platform Caddyfile at <code>/opt/platform/Caddyfile</code> contains a security headers snippet and an import directive:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>{
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    email {$ACME_EMAIL:admin@localhost}
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>}
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>(security_headers) {
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    header {
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>        Strict-Transport-Security &quot;max-age=31536000; includeSubDomains&quot;
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>        X-Content-Type-Options &quot;nosniff&quot;
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>        X-Frame-Options &quot;DENY&quot;
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>        Referrer-Policy &quot;strict-origin-when-cross-origin&quot;
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>        Permissions-Policy &quot;camera=(), microphone=(), geolocation=()&quot;
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>        -Server
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    }
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>}
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>import /etc/caddy/apps/*.caddy
+</code></pre></div>
+<p>The <code>caddy-apps/</code> directory is bind-mounted into the Caddy container at <code>/etc/caddy/apps/</code>. App workflows write per-app <code>.caddy</code> files into this directory.</p>
+<p><strong>Production</strong> (<code>deploy.yml</code>) writes <code>/opt/platform/caddy-apps/&lt;name&gt;.caddy</code> via <code>deploy-blue-green.sh</code>. Container names include the active slot:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>app.example.com {
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    import security_headers
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    reverse_proxy &lt;name&gt;-&lt;slot&gt;-app-1:8000
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>}
+</code></pre></div>
+<p><strong>Preview</strong> (<code>preview.yml</code>) writes <code>/opt/platform/caddy-apps/&lt;name&gt;-pr-&lt;N&gt;.caddy</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>pr-&lt;N&gt;.preview.&lt;name&gt;.example.com {
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    import security_headers
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    reverse_proxy &lt;name&gt;-pr-&lt;N&gt;-app-1:8000
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>}
+</code></pre></div>
+<p>After writing the file, both workflows reload Caddy:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>docker<span class="w"> </span>compose<span class="w"> </span>-f<span class="w"> </span>/opt/platform/docker-compose.yml<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-T<span class="w"> </span>caddy<span class="w"> </span>caddy<span class="w"> </span>reload<span class="w"> </span>--config<span class="w"> </span>/etc/caddy/Caddyfile
+</code></pre></div>
+<p>Preview cleanup removes the <code>.caddy</code> file and reloads Caddy again.</p>
+<h2 id="per-app-credentials">Per-App Credentials</h2>
+<p>By default, apps connect to PostgreSQL as the <code>postgres</code> superuser (credentials from <code>deploy/.env</code>). For credential isolation, run:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>bash<span class="w"> </span>/opt/platform/infrastructure/create-app-credentials.sh<span class="w"> </span>&lt;app-name&gt;
+</code></pre></div>
+<p>This creates:</p>
+<ul>
+<li><strong>PostgreSQL</strong>: A dedicated user (<code>&lt;app_name&gt;_user</code>) with access restricted to <code>&lt;app_name&gt;_db</code></li>
+<li><strong>MinIO</strong>: A dedicated user (<code>&lt;app-name&gt;-user</code>) with a scoped policy limiting access to the <code>&lt;app-name&gt;-uploads</code> bucket</li>
+<li><strong>Credentials file</strong>: <code>/opt/platform/credentials/&lt;app-name&gt;.env</code> containing <code>DB_USER</code>, <code>DB_PASSWORD</code>, <code>S3_ACCESS_KEY</code>, <code>S3_SECRET_KEY</code> (mode 600, owned by <code>deploy</code>)</li>
+</ul>
+<p>On subsequent deploys, <code>deploy.yml</code> checks for this credentials file and, if found, updates <code>deploy/.env</code> with the per-app values via <code>sed</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nv">CREDENTIALS_FILE</span><span class="o">=</span><span class="s2">&quot;/opt/platform/credentials/</span><span class="si">${</span><span class="nv">APP_NAME</span><span class="si">}</span><span class="s2">.env&quot;</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>-f<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CREDENTIALS_FILE</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="nb">source</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CREDENTIALS_FILE</span><span class="s2">&quot;</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span>sed<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;s|^DATABASE_URL=.*|DATABASE_URL=postgresql://</span><span class="si">${</span><span class="nv">DB_USER</span><span class="si">}</span><span class="s2">:</span><span class="si">${</span><span class="nv">DB_PASSWORD</span><span class="si">}</span><span class="s2">@postgres:5432/</span><span class="si">${</span><span class="nv">APP_DB</span><span class="si">}</span><span class="s2">|&quot;</span><span class="w"> </span>deploy/.env
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">    </span>sed<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;s|^S3_ACCESS_KEY=.*|S3_ACCESS_KEY=</span><span class="si">${</span><span class="nv">S3_ACCESS_KEY</span><span class="si">}</span><span class="s2">|&quot;</span><span class="w"> </span>deploy/.env
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">    </span>sed<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;s|^S3_SECRET_KEY=.*|S3_SECRET_KEY=</span><span class="si">${</span><span class="nv">S3_SECRET_KEY</span><span class="si">}</span><span class="s2">|&quot;</span><span class="w"> </span>deploy/.env
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">    </span>sed<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;s|^S3_BUCKET=.*|S3_BUCKET=</span><span class="si">${</span><span class="nv">APP_NAME</span><span class="si">}</span><span class="s2">-uploads|&quot;</span><span class="w"> </span>deploy/.env
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="k">fi</span>
+</code></pre></div>
+<p>If no credentials file exists, the workflow falls back to whatever is already in <code>deploy/.env</code> and logs a warning.</p>
+<h2 id="resource-metrics-optional">Resource Metrics (Optional)</h2>
+<p>Three additional services provide real-time resource visibility in Grafana. They are <strong>off by default</strong> and use Docker Compose profiles to control startup.</p>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Image</th>
+<th>Memory Limit</th>
+<th>CPU Limit</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>prometheus</td>
+<td>prom/prometheus:v2.53.0</td>
+<td>256M</td>
+<td>0.50</td>
+<td>Metrics storage and queries</td>
+</tr>
+<tr>
+<td>cadvisor</td>
+<td>gcr.io/cadvisor/cadvisor:v0.49.1</td>
+<td>128M</td>
+<td>0.25</td>
+<td>Container metrics</td>
+</tr>
+<tr>
+<td>node-exporter</td>
+<td>prom/node-exporter:v1.8.1</td>
+<td>64M</td>
+<td>0.25</td>
+<td>Host metrics</td>
+</tr>
+</tbody>
+</table>
+<p><strong>To enable</strong> — add <code>COMPOSE_PROFILES=metrics</code> to <code>/opt/platform/.env</code>, then run <code>docker compose up -d</code> in <code>/opt/platform/</code>. Or bootstrap with <code>sudo ENABLE_METRICS=true bash bootstrap-server.sh</code>.</p>
+<p><strong>To disable</strong> — remove the <code>COMPOSE_PROFILES=metrics</code> line from <code>.env</code>, then stop the metrics services with <code>docker compose --profile metrics down</code>.</p>
+<p>The Prometheus config (<code>/opt/platform/prometheus.yml</code>), Grafana datasource, and dashboard JSON are always created during bootstrap — they are harmless without running services and avoid needing to re-bootstrap to enable metrics later. Only the service startup is conditional.</p>
+<p>The "Resource Metrics" dashboard in Grafana includes:</p>
+<ul>
+<li><strong>Host overview</strong>: CPU %, memory %, disk %, uptime (stat panels)</li>
+<li><strong>Host time series</strong>: CPU, memory, disk I/O, network I/O over time</li>
+<li><strong>Container overview</strong>: table of all containers with CPU, memory, network</li>
+<li><strong>Per-container detail</strong>: filterable CPU and memory time series per container</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.tabs.link", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

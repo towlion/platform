@@ -1,0 +1,272 @@
+/* ==========================================================================
+   Towlion Platform — Mission Control Theme
+   Matches the landing page palette: ink-black, amber/gold, cyan accents
+   ========================================================================== */
+
+:root,
+[data-md-color-scheme="slate"] {
+  /* Primary palette */
+  --md-primary-fg-color: #e8a832;
+  --md-primary-fg-color--light: #f0be5a;
+  --md-primary-fg-color--dark: #c48a1a;
+  --md-primary-bg-color: #06080d;
+  --md-primary-bg-color--light: #0c0f16;
+
+  /* Accent */
+  --md-accent-fg-color: #32d4e8;
+  --md-accent-fg-color--transparent: rgba(50, 212, 232, 0.1);
+
+  /* Default backgrounds and text */
+  --md-default-bg-color: #0c0f16;
+  --md-default-bg-color--light: #111520;
+  --md-default-bg-color--lighter: #161b28;
+  --md-default-bg-color--lightest: #1c2333;
+  --md-default-fg-color: #c8cdd8;
+  --md-default-fg-color--light: #9098a8;
+  --md-default-fg-color--lighter: #6a7388;
+  --md-default-fg-color--lightest: #3a4258;
+
+  /* Code */
+  --md-code-bg-color: #111520;
+  --md-code-fg-color: #c8cdd8;
+  --md-code-hl-color: rgba(232, 168, 50, 0.15);
+
+  /* Typeset links */
+  --md-typeset-a-color: #e8a832;
+
+  /* Footer */
+  --md-footer-bg-color: #06080d;
+  --md-footer-bg-color--dark: #040610;
+  --md-footer-fg-color: #9098a8;
+  --md-footer-fg-color--light: #6a7388;
+  --md-footer-fg-color--lighter: #3a4258;
+}
+
+/* ==========================================================================
+   Header / Top Navigation
+   ========================================================================== */
+
+.md-header {
+  background-color: #06080d !important;
+  border-bottom: 1px solid rgba(232, 168, 50, 0.15);
+}
+
+.md-header__title {
+  color: #e8a832;
+  font-family: "Syne", sans-serif;
+  font-weight: 700;
+}
+
+.md-header__button {
+  color: #c8cdd8;
+}
+
+.md-tabs {
+  background-color: #06080d !important;
+  border-bottom: 1px solid rgba(232, 168, 50, 0.08);
+}
+
+.md-tabs__link {
+  color: #9098a8 !important;
+}
+
+.md-tabs__link--active,
+.md-tabs__link:hover,
+.md-tabs__link:focus,
+.md-tabs__link:focus-visible,
+.md-tabs__link:active {
+  color: #e8a832 !important;
+  outline: none;
+}
+
+.md-tabs__link:focus-visible {
+  outline: 1px solid rgba(232, 168, 50, 0.4);
+  outline-offset: -1px;
+}
+
+/* ==========================================================================
+   Sidebar / Navigation
+   ========================================================================== */
+
+.md-sidebar {
+  background-color: #0c0f16;
+}
+
+.md-nav__link {
+  color: #9098a8;
+}
+
+.md-nav__link:hover {
+  color: #e8a832;
+}
+
+.md-nav__link--active,
+.md-nav__item--active > .md-nav__link {
+  color: #e8a832;
+  font-weight: 600;
+}
+
+.md-nav__link--index,
+.md-nav__link--index:hover {
+  color: inherit;
+}
+
+/* ==========================================================================
+   Content Area
+   ========================================================================== */
+
+/* Headings */
+.md-typeset h1 {
+  color: #e8a832;
+}
+
+.md-typeset h2 {
+  color: #f0be5a;
+  border-bottom: 1px solid rgba(232, 168, 50, 0.12);
+  padding-bottom: 0.3em;
+}
+
+.md-typeset h3,
+.md-typeset h4,
+.md-typeset h5,
+.md-typeset h6 {
+  color: #c8cdd8;
+}
+
+/* Links */
+.md-typeset a {
+  color: #e8a832;
+}
+
+.md-typeset a:hover {
+  color: #32d4e8;
+}
+
+/* Inline code */
+.md-typeset code {
+  background-color: #161b28;
+  color: #32d4e8;
+  border: 1px solid rgba(50, 212, 232, 0.12);
+  border-radius: 4px;
+}
+
+/* Code blocks */
+.md-typeset pre {
+  background-color: #111520;
+  border: 1px solid rgba(232, 168, 50, 0.08);
+  border-radius: 6px;
+}
+
+.md-typeset pre > code {
+  background-color: transparent;
+  border: none;
+  color: #c8cdd8;
+}
+
+/* Copy button in code blocks */
+.md-clipboard {
+  color: #6a7388;
+}
+
+.md-clipboard:hover {
+  color: #e8a832;
+}
+
+/* ==========================================================================
+   Tables
+   ========================================================================== */
+
+.md-typeset table:not([class]) {
+  border: 1px solid rgba(232, 168, 50, 0.1);
+}
+
+.md-typeset table:not([class]) th {
+  background-color: #111520;
+  color: #e8a832;
+  border-bottom: 2px solid rgba(232, 168, 50, 0.2);
+}
+
+.md-typeset table:not([class]) td {
+  border-top: 1px solid rgba(232, 168, 50, 0.06);
+}
+
+.md-typeset table:not([class]) tr:hover td {
+  background-color: rgba(232, 168, 50, 0.04);
+}
+
+/* ==========================================================================
+   Admonitions
+   ========================================================================== */
+
+.md-typeset .admonition,
+.md-typeset details {
+  background-color: #111520;
+  border-left-width: 3px;
+  border-radius: 4px;
+}
+
+.md-typeset .admonition-title,
+.md-typeset summary {
+  background-color: rgba(232, 168, 50, 0.06);
+}
+
+/* ==========================================================================
+   Search
+   ========================================================================== */
+
+.md-search__input {
+  background-color: #111520;
+  color: #c8cdd8;
+}
+
+.md-search__input::placeholder {
+  color: #6a7388;
+}
+
+.md-search-result__meta {
+  background-color: #111520;
+  color: #9098a8;
+}
+
+.md-search-result__item {
+  border-bottom-color: rgba(232, 168, 50, 0.06);
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+
+.md-footer {
+  border-top: 1px solid rgba(232, 168, 50, 0.1);
+}
+
+/* ==========================================================================
+   Scrollbar (Webkit)
+   ========================================================================== */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0c0f16;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1c2333;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2a3348;
+}
+
+/* ==========================================================================
+   Selection highlight
+   ========================================================================== */
+
+::selection {
+  background-color: rgba(232, 168, 50, 0.25);
+  color: #ffffff;
+}
