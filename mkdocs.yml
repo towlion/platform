@@ -29,6 +29,13 @@ extra:
 extra_css:
   - stylesheets/custom.css
 
+plugins:
+  - search
+  - with-pdf:
+      cover_title: Towlion Platform
+      cover_subtitle: Documentation
+      output_path: pdf/towlion-platform.pdf
+
 nav:
   - Getting Started:
       - Home: index.md
