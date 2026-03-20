@@ -275,7 +275,7 @@ graph TB
         Actions -->|SSH| Clone["Clone to /opt/apps/app-pr-N/"]
         Clone --> Schema["Create PR-specific DB schema"]
         Schema --> BuildPR["docker compose up -d --build"]
-        BuildPR --> CaddyPR["Write pr-N.preview.domain.caddy"]
+        BuildPR --> CaddyPR["Write pr-N.preview.app.domain.caddy"]
         CaddyPR --> ReloadPR["Caddy reload"]
         ReloadPR --> Comment["Comment preview URL on PR"]
     end

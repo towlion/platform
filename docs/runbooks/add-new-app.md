@@ -58,7 +58,7 @@ Optional:
 
 | Secret | Value |
 |---|---|
-| `PREVIEW_DOMAIN` | Base domain for PR previews (e.g., `example.com`) |
+| `PREVIEW_DOMAIN` | Base domain for PR previews (e.g., `example.com`). Also add a `*.preview.<app-name>.<domain>` DNS A record. |
 
 ### 6. Push to main
 

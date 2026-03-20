@@ -14,7 +14,7 @@ GitHub Actions (preview.yml) triggered
 Deploy preview container + DB schema
        |
        v
-pr-42.preview.anulectra.com
+pr-42.preview.todo-app.anulectra.com
 ```
 
 Each preview environment gets:
@@ -26,18 +26,19 @@ Each preview environment gets:
 
 ## DNS Configuration
 
-A wildcard DNS A record points all preview subdomains to the platform server:
+Each app needs a per-app wildcard DNS A record pointing preview subdomains to the platform server:
 
 ```
-*.preview.anulectra.com → 143.198.104.8  (TTL 3600)
+*.preview.todo-app.anulectra.com → 143.198.104.8  (TTL 3600)
+*.preview.wit.anulectra.com      → 143.198.104.8  (TTL 3600)
 ```
 
 This allows any preview subdomain to resolve automatically:
 
 ```
-pr-1.preview.anulectra.com
-pr-42.preview.anulectra.com
-pr-99.preview.anulectra.com
+pr-1.preview.todo-app.anulectra.com
+pr-42.preview.todo-app.anulectra.com
+pr-5.preview.wit.anulectra.com
 ```
 
 ## GitHub Secrets
@@ -48,7 +49,7 @@ Apps need one additional secret beyond the standard 4:
 |---|---|---|
 | `PREVIEW_DOMAIN` | `anulectra.com` | Base domain for preview URLs |
 
-The preview URL is constructed as `pr-{N}.preview.{PREVIEW_DOMAIN}`.
+The preview URL is constructed as `pr-{N}.preview.{APP_NAME}.{PREVIEW_DOMAIN}`.
 
 ## Deployment Workflow
 
@@ -109,7 +110,7 @@ todo-app-pr-42-celery-worker-1
 Each preview gets a Caddyfile at `/opt/platform/caddy-apps/{APP_NAME}-pr-{N}.caddy`:
 
 ```
-pr-42.preview.anulectra.com {
+pr-42.preview.todo-app.anulectra.com {
     reverse_proxy todo-app-pr-42-app-1:8000
 }
 ```

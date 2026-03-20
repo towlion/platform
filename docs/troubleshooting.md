@@ -93,7 +93,7 @@ cat /opt/platform/caddy-apps/<app-name>.caddy
 
 ```bash
 # DNS resolves?
-dig +short pr-<N>.preview.<domain>
+dig +short pr-<N>.preview.<app>.<domain>
 
 # Caddyfile exists?
 cat /opt/platform/caddy-apps/<app-name>-pr-<N>.caddy
@@ -106,7 +106,7 @@ docker ps --filter name=<app-name>-pr-<N>
 
 | Cause | What you'll see | Fix |
 |---|---|---|
-| Wildcard DNS not set | `dig` returns nothing | Add `*.preview.<domain>` A record pointing to server IP |
+| Wildcard DNS not set | `dig` returns nothing | Add `*.preview.<app>.<domain>` A record pointing to server IP |
 | Preview container crashed | Container not running | Check logs: `docker logs <app-name>-pr-<N>-app-1` |
 | Missing `PREVIEW_DOMAIN` secret | Workflow skips preview deployment | Set `PREVIEW_DOMAIN` in repo secrets |
 | PR already closed | Cleanup removed the container | Reopen the PR or push a new commit to trigger preview |

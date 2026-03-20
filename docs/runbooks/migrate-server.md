@@ -211,7 +211,7 @@ Update A records for all domains to point to the new server IP:
 
 - Each app domain (e.g., `app.example.com`, `app2.example.com`)
 - The ops domain (e.g., `ops.example.com`)
-- Preview wildcard record (e.g., `*.preview.example.com`)
+- Preview wildcard records (e.g., `*.preview.todo-app.example.com`, `*.preview.wit.example.com`)
 
 DNS propagation typically takes minutes but can take up to 48 hours depending on TTL. Consider lowering TTL values a day before the migration.
 

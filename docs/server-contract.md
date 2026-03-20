@@ -59,7 +59,7 @@ This document defines the contract between the platform infrastructure (bootstra
 
 1. **Bootstrap the server** — Run `sudo bash infrastructure/bootstrap-server.sh` on a fresh Debian machine. This creates the directory layout above, installs Docker, creates the `deploy` user, generates platform credentials, starts the 7 core platform services (plus 3 optional metrics services if enabled), copies infrastructure scripts, and installs cron jobs.
 
-2. **Configure DNS** — Point app domains and `*.preview.<domain>` to the server IP.
+2. **Configure DNS** — Point app domains and `*.preview.<app>.<domain>` (one per app) to the server IP.
 
 3. **Clone the app repo** — SSH in as `deploy` and clone the app to `/opt/apps/<name>/`.
 
@@ -198,7 +198,7 @@ app.example.com {
 **Preview** (`preview.yml`) writes `/opt/platform/caddy-apps/<name>-pr-<N>.caddy`:
 
 ```
-pr-<N>.preview.example.com {
+pr-<N>.preview.<name>.example.com {
     import security_headers
     reverse_proxy <name>-pr-<N>-app-1:8000
 }
