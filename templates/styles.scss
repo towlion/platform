@@ -43,3 +43,23 @@ table tr, table td {
 table tr:nth-child(even) td {
   background-color: #f9f9f9 !important;
 }
+
+/* Admonitions */
+.admonition, details, .md-typeset .admonition, .md-typeset details {
+  background-color: #f8f9fa !important;
+  border-left: 3px solid #888 !important;
+  color: #1a1a1a !important;
+}
+
+.admonition-title, summary, .md-typeset .admonition-title, .md-typeset summary {
+  background-color: #eef0f2 !important;
+  color: #1a1a1a !important;
+}
+
+.md-typeset .admonition-title::before, .md-typeset summary::before {
+  display: none !important;
+}
+
+.admonition p, .admonition li, details p, details li {
+  color: #1a1a1a !important;
+}
