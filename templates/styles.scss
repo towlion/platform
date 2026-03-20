@@ -1,0 +1,45 @@
+/* PDF print overrides — force readable dark text on white background */
+
+body, article, section, div, p, li, td, th, span, dd, dt {
+  color: #1a1a1a !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #111111 !important;
+}
+
+a {
+  color: #1a56db !important;
+}
+
+code {
+  background-color: #f5f5f5 !important;
+  color: #c7254e !important;
+  border: 1px solid #e0e0e0 !important;
+}
+
+pre {
+  background-color: #f5f5f5 !important;
+  border: 1px solid #e0e0e0 !important;
+}
+
+pre code {
+  color: #1a1a1a !important;
+  border: none !important;
+}
+
+table th {
+  background-color: #f0f0f0 !important;
+  color: #111111 !important;
+  border-bottom: 2px solid #cccccc !important;
+}
+
+table tr, table td {
+  background-color: #ffffff !important;
+  color: #1a1a1a !important;
+  border-top: 1px solid #e0e0e0 !important;
+}
+
+table tr:nth-child(even) td {
+  background-color: #f9f9f9 !important;
+}
